@@ -1,0 +1,26 @@
+name: DfyItems
+version: '1.0-SNAPSHOT'
+main: me.Starry_Phantom.dfyItems.DfyItems
+api-version: '1.21'
+authors: [ Starry_Phantom ]
+permissions:
+  dfyitems.manage:
+    description: Allows reloading items/abilities/scripts/etc
+    default: op
+  dfyitems.get.access:
+    description: Allows access to the /get command
+    default: op
+  dfyitems.get.others:
+    description: Allows giving items to others
+    default: op
+  dfyitems.get.gui:
+    description: Allows the opening of the item GUI
+commands:
+  get:
+    description: 'Gives you an item :3'
+    usage: /get <id> [amount] [player]
+    aliases: dgive, item-gui,dfis
+  dfyitems:
+    description: Core plugin functions. Run for /dfyitems help for help!
+    usage: /dfyitems
+    aliases: dfi

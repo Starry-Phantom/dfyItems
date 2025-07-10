@@ -1,0 +1,194 @@
+package me.Starry_Phantom.dfyItems.itemStructure;
+
+import me.Starry_Phantom.dfyItems.DfyItems;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Map;
+
+public abstract class DfyStructure {
+    protected static DfyItems PLUGIN;
+
+    protected final File SOURCE_FILE;
+    protected final int INDEX;
+    protected String STRUCTURE_ID;
+    protected Map<String, Object> data;
+    protected final static String DELIMITER = "|";
+    protected final static String SUB_DELIMITER = ":";
+
+    protected boolean THROWN_LOAD_ERROR;
+
+    public static void setPlugin(DfyItems plugin) {
+        PLUGIN = plugin;
+    }
+
+    public DfyStructure(File loadFile, int index) {
+        this.SOURCE_FILE = loadFile;
+        this.INDEX = index;
+        if (!importData()) {
+            PLUGIN.severe("Could not import data successfully for " + SOURCE_FILE.getName());
+            THROWN_LOAD_ERROR = true;
+            return;
+        }
+        if (!loadData()) {
+            PLUGIN.severe("Could not load data successfully for " + SOURCE_FILE.getName());
+            THROWN_LOAD_ERROR = true;
+            return;
+        }
+        THROWN_LOAD_ERROR = false;
+    }
+
+    protected abstract boolean loadData();
+
+    protected boolean importData() {
+        Yaml yaml = new Yaml();
+        try (InputStream input = new FileInputStream(SOURCE_FILE)) {
+            data = yaml.load(input);
+            if (INDEX > data.size()) {
+                PLUGIN.severe("SIZE: " + data.size() + " | INDEX: " + INDEX + " | BOOL: " + (INDEX + 1 < data.size()) );
+                PLUGIN.severe("Malformed file (" + SOURCE_FILE.getName() + ")");
+                return false;
+            }
+            STRUCTURE_ID = (String) data.keySet().toArray()[INDEX];
+
+            data = (Map<String, Object>) data.get(STRUCTURE_ID);
+        } catch (Exception e) {
+            PLUGIN.severe("Failed to load item ??? from file " + SOURCE_FILE.getName());
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean initField(String field, String value) {
+        try {
+            Field f = this.getClass().getDeclaredField(field);
+            f.setAccessible(true);
+            if (!data.containsKey(field)) return false;
+            if (data.get(field) instanceof String s) {
+                f.set(this, s);
+            } else if (data.get(field) == null) {
+                f.set(this, null);
+            } else {
+                f.set(this, value);
+                if (value.isEmpty()) f.set(this, null);
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            if (e instanceof NoSuchFieldException) PLUGIN.warn("Tried to initialize invalid field (" + field + ")");
+            if (e instanceof IllegalAccessException) PLUGIN.warn("Failed to access field while initializing (" + field + ")");
+            return false;
+        }
+
+        return true;
+    }
+
+    protected <T extends Enum<T>> boolean initField(String field, T value, Class<T> clazz) {
+        try {
+            Field f = this.getClass().getDeclaredField(field);
+            f.setAccessible(true);
+            if (!data.containsKey(field)) return false;
+            T thing;
+            if (data.get(field) instanceof String s) {
+                thing = Enum.valueOf(clazz, s);
+                if (thing == null) {
+                    f.set(this, value);
+                    return false;
+                }
+                f.set(this, thing);
+            } else if (data.get(field) == null) {
+                f.set(this, value);
+            } else {
+                f.set(this, value);
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            if (e instanceof NoSuchFieldException) PLUGIN.warn("Tried to initialize invalid field (" + field + ")");
+            if (e instanceof IllegalAccessException) PLUGIN.warn("Failed to access field while initializing (" + field + ")");
+            return false;
+        }
+
+        return true;
+    }
+
+    protected <T> boolean loadArrayList(String field, ArrayList<T> storage, Class<T> clazz) {
+        if (!data.containsKey(field)) return false;
+        if (data.get(field).getClass().isPrimitive()) {
+            if (clazz.getSimpleName().toLowerCase().contains(data.get(field).getClass().getSimpleName())) storage.add((T) data.get(field));
+        } else if (clazz.isInstance(data.get(field))) {
+            storage.add((T) data.get(field));
+        } else if (data.get(field) instanceof ArrayList<?> s) {
+            int skipped = 0;
+            for (Object thing : s) {
+                if (!(clazz.isInstance(thing))) {
+                    skipped++;
+                    continue;
+                }
+                storage.add((T) thing);
+            }
+            if (skipped > 0) PLUGIN.warn("Skipped " + skipped + " abilities when loading item " + STRUCTURE_ID);
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    protected <T extends Enum<T>> boolean loadEnumArrayList(String field, ArrayList<T> storage, Class<T> clazz) {
+        if (!data.containsKey(field)) return false;
+        if (data.get(field) instanceof String s) {
+            storage.add(Enum.valueOf(clazz, s));
+        } else if (data.get(field) instanceof ArrayList<?> s) {
+            int skipped = 0;
+            for (Object str : s) {
+                if (!(str instanceof String)) {
+                    skipped++;
+                    continue;
+                }
+                storage.add(Enum.valueOf(clazz, (String) str));
+            }
+            if (skipped > 0) PLUGIN.warn("Skipped " + skipped + " values when loading " + STRUCTURE_ID + " in enum " + clazz.getName());
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+
+    protected boolean initField(String field, boolean value) {
+        try {
+            Field f = this.getClass().getDeclaredField(field);
+            f.setAccessible(true);
+            if (!data.containsKey(field)) {
+                PLUGIN.severe("DOESNT EXIST HEH??");
+                return false;
+            }
+            if (data.get(field) == null) {
+                f.set(this, value);
+                return false;
+            } else if (data.get(field) instanceof Boolean b) {
+                f.set(this, b);
+            } else {
+                f.set(this, value);
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            if (e instanceof NoSuchFieldException) PLUGIN.warn("Tried to initialize invalid field (" + field + ")");
+            if (e instanceof IllegalAccessException) PLUGIN.warn("Failed to access field while initializing (" + field + ")");
+            return false;
+        }
+
+        return true;
+    }
+
+    public String getID() {
+        return this.STRUCTURE_ID;
+    }
+
+    public File getSourceFile() {
+        return SOURCE_FILE;
+    }
+
+    public int getIndex() {
+        return INDEX;
+    }
+}

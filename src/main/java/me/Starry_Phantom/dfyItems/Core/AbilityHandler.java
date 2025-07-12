@@ -143,7 +143,7 @@ public class AbilityHandler implements Listener {
             try {
                 if (!ability.isEnabled()) {
                     Player p = (Player) e.getClass().getMethod("getPlayer").invoke(e);
-                    p.sendMessage(Component.text("§c" + ability.getDisplayName() + "§c is currently disabled!"));
+                    p.sendMessage(Component.text("§c" + ability.getDisplayName() + "§r§c is currently disabled!"));
                     continue;
                 }
 

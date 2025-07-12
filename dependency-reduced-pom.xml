@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>me.Starry_Phantom</groupId>
   <artifactId>DfyItems</artifactId>
-  <name>DfyItems</name>
-  <version>1.0.0</version>
+  <name>dfyItems</name>
+  <version>1.1.0-SNAPSHOT</version>
   <build>
     <defaultGoal>clean package</defaultGoal>
     <resources>
@@ -21,6 +21,7 @@
           <source>${java.version}</source>
           <excludes>
             <exclude>**/sillytest.java</exclude>
+            <exclude>/.git</exclude>
           </excludes>
           <target>${java.version}</target>
         </configuration>

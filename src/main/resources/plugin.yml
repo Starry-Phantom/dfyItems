@@ -1,4 +1,4 @@
-name: DfyItems
+name: dfyItems
 version: '1.0-SNAPSHOT'
 main: me.Starry_Phantom.dfyItems.DfyItems
 api-version: '1.21'

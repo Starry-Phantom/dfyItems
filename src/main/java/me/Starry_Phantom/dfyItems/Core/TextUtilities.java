@@ -2,9 +2,13 @@ package me.Starry_Phantom.dfyItems.Core;
 
 import me.Starry_Phantom.dfyItems.DfyItems;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 import java.io.File;
+import java.time.format.TextStyle;
 import java.util.*;
 
 public class TextUtilities {
@@ -56,6 +60,48 @@ public class TextUtilities {
         return output;
     }
 
+    public static TextComponent applyHexColoring(String s) {
+        String hexCharacter = "§#";
+        if (!s.contains(hexCharacter)) return Component.text(s);
+        ComponentBuilder<TextComponent, ?> builder = Component.text();
+        int counter = 0;
+        do {
+            int hexIndex = s.indexOf(hexCharacter);
+            int hexEndIndex = hexIndex + 7;
+            builder.append(Component.text(s.substring(0, hexIndex)));
+
+            String hex = s.substring(hexIndex + 1, hexEndIndex + 1);
+            PLUGIN.severe(hex);
+            int endIndex = findNextReset(s, hexEndIndex + 1);
+            if (endIndex == -1) endIndex = s.length();
+            builder.append(
+                    Component.text(s.substring(hexEndIndex + 1, endIndex))
+                            .color(TextColor.fromHexString(hex))
+                            .decoration(TextDecoration.ITALIC, false));
+            s = s.substring(endIndex);
+            counter++;
+            if (counter > 1000) break;
+        } while (s.contains(hexCharacter));
+        builder.append(Component.text(s));
+        return builder.build();
+    }
+
+    private static int findNextReset(String string, int index) {
+        if (string.isEmpty()) return -1;
+        int counter = 0;
+        while (string.indexOf("§", index) != -1) {
+            index = string.indexOf("§", index);
+            if (string.length() == index + 1) return -1;
+            if ("1234567890abcdef#r".contains(
+                    Character.toString(string.charAt(index + 1))
+            )) return index;
+            counter++;
+            index++;
+            if (counter > 1000) break;
+        }
+        return -1;
+    }
+
     public static void setPlugin(DfyItems plugin) {
         PLUGIN = plugin;
 
@@ -67,7 +113,7 @@ public class TextUtilities {
 
     public static ArrayList<TextComponent> insertIntoComponents(ArrayList<String> strings) {
         ArrayList<TextComponent> output = new ArrayList<>();
-        for (String s : strings) output.add(Component.text("§7" + s));
+        for (String s : strings) output.add(TextUtilities.applyHexColoring("§r§7" + s));
         return output;
     }
 

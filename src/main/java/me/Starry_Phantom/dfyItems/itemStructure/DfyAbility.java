@@ -36,8 +36,8 @@ public class DfyAbility extends DfyStructure {
 
     public ArrayList<String> getLoreBlock() {
         ArrayList<String> loreBlock = new ArrayList<>();
-        loreBlock.add("§6" + displayName);
-        loreBlock.addAll(TextUtilities.wrapText(lore, "§7"));
+        loreBlock.add("§r§6" + displayName);
+        if (lore != null && !lore.isEmpty()) loreBlock.addAll(TextUtilities.wrapText(lore, "§r§7"));
         return loreBlock;
     }
 

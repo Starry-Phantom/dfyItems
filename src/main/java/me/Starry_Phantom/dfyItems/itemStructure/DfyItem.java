@@ -19,9 +19,9 @@ import java.io.File;
 import java.util.*;
 
 public class DfyItem extends DfyStructure {
-    private static final String ENCHANT_COLOR = "§d";
-    private static final String NEGATIVE_STAT_COLOR = "§c";
-    private static final String POSITIVE_STAT_COLOR = "§9+";
+    private static final String ENCHANT_COLOR = "§r§d";
+    private static final String NEGATIVE_STAT_COLOR = "§r§c";
+    private static final String POSITIVE_STAT_COLOR = "§r§9+";
 
     private String name;
     private String rarity, type, model;
@@ -116,7 +116,7 @@ public class DfyItem extends DfyStructure {
     }
 
     private void addStatLore(ArrayList<TextComponent> lore) {
-        if (abilities == null) return;
+        if (stats == null) return;
         for (Map<TriggerSlot, ArrayList<Map<String, Object>>> stat : stats) {
             lore.addAll(TextUtilities.insertIntoComponents(createStatBlock(stat)));
             lore.add(Component.text(""));
@@ -128,8 +128,8 @@ public class DfyItem extends DfyStructure {
         TriggerSlot slot = statBlock.keySet().toArray(new TriggerSlot[0])[0];
 
         String header;
-        if (TriggerSlot.isIrregular(slot)) header = "§7When in slot " + slot.name().toLowerCase() + ":";
-        else header = "§7When in "+ TextUtilities.toReadableCase(slot.name()) + ":";
+        if (TriggerSlot.isIrregular(slot)) header = "§r§7When in slot " + slot.name().toLowerCase() + ":";
+        else header = "§r§7When in "+ TextUtilities.toReadableCase(slot.name()) + ":";
         lore.add(header);
 
         for (Map<String, Object> stat : statBlock.get(slot)) {
@@ -245,7 +245,7 @@ public class DfyItem extends DfyStructure {
     }
 
     private void setName(ItemMeta meta) {
-        meta.customName(Component.text("§f" + name));
+        meta.customName(TextUtilities.applyHexColoring("§r§f" + name));
     }
 
     private static void hideFlags(ItemMeta meta) {
@@ -280,16 +280,15 @@ public class DfyItem extends DfyStructure {
     }
 
     private void addRarityDisplay(ArrayList<TextComponent> lore) {
-        lore.add(Component.text("§8" +
-                ((rarity != null) ? rarity : "null") + " §8" +
-                ((type != null) ? type : "item")
-        ));
+        lore.add(TextUtilities.applyHexColoring("§r§8" +
+                ((rarity != null) ? rarity : "null") + " §r§8" +
+                ((type != null) ? type : "item")));
 
         lore.add(Component.text(""));
     }
 
     private void addShortLore(ArrayList<TextComponent> lore) {
-        if (shortLore != null) lore.add(Component.text("§7" + shortLore));
+        if (shortLore != null) lore.add(TextUtilities.applyHexColoring("§r§7" + shortLore));
     }
 
     @Override

@@ -71,7 +71,6 @@ public class TextUtilities {
             builder.append(Component.text(s.substring(0, hexIndex)));
 
             String hex = s.substring(hexIndex + 1, hexEndIndex + 1);
-            PLUGIN.severe(hex);
             int endIndex = findNextReset(s, hexEndIndex + 1);
             if (endIndex == -1) endIndex = s.length();
             builder.append(

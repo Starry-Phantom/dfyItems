@@ -1,5 +1,6 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
 import net.kyori.adventure.text.Component;
@@ -60,6 +61,7 @@ public class DfyItem extends DfyStructure {
 
         addShortLore(lore);
         addRarityDisplay(lore);
+        addRarityNBT(meta);
 
         addLongLore(lore);
 
@@ -80,6 +82,18 @@ public class DfyItem extends DfyStructure {
         meta.lore(lore);
         item.setItemMeta(meta);
         return item;
+    }
+
+    private void addRarityNBT(ItemMeta meta) {
+        NamespacedKey key;
+        if (rarity != null) {
+            key = new NamespacedKey(PLUGIN, "rarity");
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, rarity.toUpperCase());
+        }
+        if (type != null) {
+            key = new NamespacedKey(PLUGIN, "type");
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, type.toUpperCase());
+        }
     }
 
     private void addStatNBT(ItemMeta meta) {
@@ -201,7 +215,6 @@ public class DfyItem extends DfyStructure {
 
         if (equipSound != null) {
             NamespacedKey key = new NamespacedKey("minecraft", equipSound);
-            PLUGIN.severe(key.toString());
             eq.setEquipSound(Registry.SOUNDS.get(key));
         }
 
@@ -210,9 +223,6 @@ public class DfyItem extends DfyStructure {
 
     private void setGlint(ItemMeta meta) {
         if (glintNull) return;
-        PLUGIN.log(Boolean.toString(glintNull));
-        PLUGIN.log(Boolean.toString(glint));
-
         meta.setEnchantmentGlintOverride(glint);
     }
 
@@ -261,7 +271,7 @@ public class DfyItem extends DfyStructure {
     private void addAbilityLore(ArrayList<TextComponent> lore) {
         if (!abilities.isEmpty()) {
             for (String s : abilities) {
-                DfyAbility ability = PLUGIN.getAbility(s);
+                DfyAbility ability = FileManager.getAbility(s);
                 if (ability == null) {
                     PLUGIN.warn("Ability " + s + " not found!");
                     continue;

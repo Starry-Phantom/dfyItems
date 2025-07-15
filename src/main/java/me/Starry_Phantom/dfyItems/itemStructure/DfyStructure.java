@@ -160,7 +160,7 @@ public abstract class DfyStructure {
             Field f = this.getClass().getDeclaredField(field);
             f.setAccessible(true);
             if (!data.containsKey(field)) {
-                PLUGIN.severe("DOESNT EXIST HEH??");
+                PLUGIN.warn("Tried to load a field that doesn't exist! (This may be intentional)");
                 return false;
             }
             if (data.get(field) == null) {

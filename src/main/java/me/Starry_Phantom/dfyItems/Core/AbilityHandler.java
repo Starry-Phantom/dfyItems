@@ -58,7 +58,7 @@ public class AbilityHandler implements Listener {
     private URLClassLoader compileFileFromAbility(DfyAbility ability) {
         try {
             File scriptPath = new File(ability.getPath());
-            String compilePath = PLUGIN.getCompiledFolder().getCanonicalPath() + File.separator + scriptPath.getName().replace(".java", "");
+            String compilePath = FileManager.getCompiledFolder().getCanonicalPath() + File.separator + scriptPath.getName().replace(".java", "");
             javaCompiler.run(null, null, null,
                     //"-verbose",
                     "-d", compilePath,
@@ -175,8 +175,7 @@ public class AbilityHandler implements Listener {
             if (abilities == null) continue;
 
             for (String s : abilities) {
-                System.out.println(s);
-                DfyAbility a = PLUGIN.getAbility(s);
+                DfyAbility a = FileManager.getAbility(s);
                 if (a == null) continue;
                 if (a.getTriggerSlots().contains(slot) &&
                         a.getTriggerCases().contains(trigger)) activeAbilities.add(a);
@@ -188,7 +187,7 @@ public class AbilityHandler implements Listener {
 
     public void replace(DfyAbility query, DfyAbility target) {
         URLClassLoader loader = abilityFiles.remove(query);
-        if (loader == null) PLUGIN.severe("AAAAAAAAAAAAAA");
+        if (loader == null) PLUGIN.severe("Attempted to replace an ability that doesn't exist! (" + query.getID() + ")");
         abilityFiles.put(target, loader);
     }
 

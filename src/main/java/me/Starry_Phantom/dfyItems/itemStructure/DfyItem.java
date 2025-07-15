@@ -1,5 +1,6 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
 import net.kyori.adventure.text.Component;
@@ -19,9 +20,9 @@ import java.io.File;
 import java.util.*;
 
 public class DfyItem extends DfyStructure {
-    private static final String ENCHANT_COLOR = "§d";
-    private static final String NEGATIVE_STAT_COLOR = "§c";
-    private static final String POSITIVE_STAT_COLOR = "§9+";
+    private static final String ENCHANT_COLOR = "§r§d";
+    private static final String NEGATIVE_STAT_COLOR = "§r§c";
+    private static final String POSITIVE_STAT_COLOR = "§r§9+";
 
     private String name;
     private String rarity, type, model;
@@ -60,6 +61,7 @@ public class DfyItem extends DfyStructure {
 
         addShortLore(lore);
         addRarityDisplay(lore);
+        addRarityNBT(meta);
 
         addLongLore(lore);
 
@@ -80,6 +82,18 @@ public class DfyItem extends DfyStructure {
         meta.lore(lore);
         item.setItemMeta(meta);
         return item;
+    }
+
+    private void addRarityNBT(ItemMeta meta) {
+        NamespacedKey key;
+        if (rarity != null) {
+            key = new NamespacedKey(PLUGIN, "rarity");
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, rarity.toUpperCase());
+        }
+        if (type != null) {
+            key = new NamespacedKey(PLUGIN, "type");
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, type.toUpperCase());
+        }
     }
 
     private void addStatNBT(ItemMeta meta) {
@@ -116,7 +130,7 @@ public class DfyItem extends DfyStructure {
     }
 
     private void addStatLore(ArrayList<TextComponent> lore) {
-        if (abilities == null) return;
+        if (stats == null) return;
         for (Map<TriggerSlot, ArrayList<Map<String, Object>>> stat : stats) {
             lore.addAll(TextUtilities.insertIntoComponents(createStatBlock(stat)));
             lore.add(Component.text(""));
@@ -128,8 +142,8 @@ public class DfyItem extends DfyStructure {
         TriggerSlot slot = statBlock.keySet().toArray(new TriggerSlot[0])[0];
 
         String header;
-        if (TriggerSlot.isIrregular(slot)) header = "§7When in slot " + slot.name().toLowerCase() + ":";
-        else header = "§7When in "+ TextUtilities.toReadableCase(slot.name()) + ":";
+        if (TriggerSlot.isIrregular(slot)) header = "§r§7When in slot " + slot.name().toLowerCase() + ":";
+        else header = "§r§7When in "+ TextUtilities.toReadableCase(slot.name()) + ":";
         lore.add(header);
 
         for (Map<String, Object> stat : statBlock.get(slot)) {
@@ -201,7 +215,6 @@ public class DfyItem extends DfyStructure {
 
         if (equipSound != null) {
             NamespacedKey key = new NamespacedKey("minecraft", equipSound);
-            PLUGIN.severe(key.toString());
             eq.setEquipSound(Registry.SOUNDS.get(key));
         }
 
@@ -210,9 +223,6 @@ public class DfyItem extends DfyStructure {
 
     private void setGlint(ItemMeta meta) {
         if (glintNull) return;
-        PLUGIN.log(Boolean.toString(glintNull));
-        PLUGIN.log(Boolean.toString(glint));
-
         meta.setEnchantmentGlintOverride(glint);
     }
 
@@ -245,7 +255,7 @@ public class DfyItem extends DfyStructure {
     }
 
     private void setName(ItemMeta meta) {
-        meta.customName(Component.text("§f" + name));
+        meta.customName(TextUtilities.applyHexColoring("§r§f" + name));
     }
 
     private static void hideFlags(ItemMeta meta) {
@@ -261,7 +271,7 @@ public class DfyItem extends DfyStructure {
     private void addAbilityLore(ArrayList<TextComponent> lore) {
         if (!abilities.isEmpty()) {
             for (String s : abilities) {
-                DfyAbility ability = PLUGIN.getAbility(s);
+                DfyAbility ability = FileManager.getAbility(s);
                 if (ability == null) {
                     PLUGIN.warn("Ability " + s + " not found!");
                     continue;
@@ -280,16 +290,15 @@ public class DfyItem extends DfyStructure {
     }
 
     private void addRarityDisplay(ArrayList<TextComponent> lore) {
-        lore.add(Component.text("§8" +
-                ((rarity != null) ? rarity : "null") + " §8" +
-                ((type != null) ? type : "item")
-        ));
+        lore.add(TextUtilities.applyHexColoring("§r§8" +
+                ((rarity != null) ? rarity : "null") + " §r§8" +
+                ((type != null) ? type : "item")));
 
         lore.add(Component.text(""));
     }
 
     private void addShortLore(ArrayList<TextComponent> lore) {
-        if (shortLore != null) lore.add(Component.text("§7" + shortLore));
+        if (shortLore != null) lore.add(TextUtilities.applyHexColoring("§r§7" + shortLore));
     }
 
     @Override

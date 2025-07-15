@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me.Starry_Phantom</groupId>
-    <artifactId>dfyitems</artifactId>
-    <version>1.0.1</version>
+    <artifactId>dfyitems</artifactId
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
-    <name>DfyItems</name>
+    <name>dfyItems</name>
 
     <properties>
         <java.version>21</java.version>
@@ -27,6 +27,7 @@
                     <source>${java.version}</source>
                     <excludes>
                         <exclude>**/sillytest.java</exclude>
+                        <exclude>/.git</exclude>
                     </excludes>
                     <target>${java.version}</target>
                 </configuration>

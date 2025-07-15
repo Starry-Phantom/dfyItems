@@ -1,5 +1,6 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerCase;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
@@ -26,18 +27,18 @@ public class DfyAbility extends DfyStructure {
     public boolean isEnabled() {return enabled;}
 
     public static void reloadAbilitiesWithPath(String path) {
-        for (Object o : PLUGIN.getAbilities().values().toArray()) {
+        for (Object o : FileManager.getAbilities().values().toArray()) {
             DfyAbility ability = (DfyAbility) o;
             if (ability.getPath().equals(path)) {
-                PLUGIN.getAbilityHandler().recompile(ability);
+                FileManager.getAbilityHandler().recompile(ability);
             }
         }
     }
 
     public ArrayList<String> getLoreBlock() {
         ArrayList<String> loreBlock = new ArrayList<>();
-        loreBlock.add("§6" + displayName);
-        loreBlock.addAll(TextUtilities.wrapText(lore, "§7"));
+        loreBlock.add("§r§6" + displayName);
+        if (lore != null && !lore.isEmpty()) loreBlock.addAll(TextUtilities.wrapText(lore, "§r§7"));
         return loreBlock;
     }
 
@@ -66,9 +67,9 @@ public class DfyAbility extends DfyStructure {
 
         try {
             if (data.get("path") instanceof String s) {
-                path = PLUGIN.getScriptFolder().getCanonicalPath() + s;
+                path = FileManager.getScriptFolder().getCanonicalPath() + s;
             } else {
-                path = PLUGIN.getScriptFolder().getCanonicalPath() + File.separator + TextUtilities.toClassCase(STRUCTURE_ID) ;
+                path = FileManager.getScriptFolder().getCanonicalPath() + File.separator + TextUtilities.toClassCase(STRUCTURE_ID) ;
             }
             path = TextUtilities.correctPath(path);
             className = new File(path).getName().replace(".java", "");

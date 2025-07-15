@@ -1,5 +1,6 @@
 package me.Starry_Phantom.dfyItems.Commands;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.StructureLoader;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.DfyItems;
@@ -52,14 +53,12 @@ public class CoreCommands implements CommandExecutor {
 
         if (args[0].equalsIgnoreCase("reload")) {
             if (args.length == 1) {
-                PLUGIN.log("A");
                 return false;
             }
 
             String path = args[1];
             if (path.matches("(items)|(abilities)|(scripts)|(config)|(all)")) {
                 // TODO: IMPLEMENT
-                PLUGIN.log("B");
                 return false;
             }
 
@@ -67,8 +66,6 @@ public class CoreCommands implements CommandExecutor {
             if (!path.startsWith(File.separator)) path = File.separator + path;
 
             String separator = TextUtilities.makeRegexSafe(File.separator);
-
-            PLUGIN.log(path.split(separator)[1]);
 
             return switch (path.split(separator)[1]) {
                 case "items" -> reloadFile(path, commandSender, DfyItem.class);
@@ -118,7 +115,7 @@ public class CoreCommands implements CommandExecutor {
         }
 
         String[] keys = storage.keySet().toArray(new String[0]);
-        PLUGIN.reloadStorage(keys, storage, clazz);
+        FileManager.reloadStorage(keys, storage, clazz);
 
         double timeToReload = (System.nanoTime() - time) / 1000000d;
         if (sender instanceof Player) sender.sendMessage(Component.text(PLUGIN.getPrefix() + "Reloading §6'" + path + "'§e in " + timeToReload + "ms!" ));

@@ -1,5 +1,6 @@
 package me.Starry_Phantom.dfyItems.Commands;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import net.kyori.adventure.text.Component;
@@ -94,7 +95,7 @@ public class GetCommand implements CommandExecutor {
 
         String id = args[0];
         id = id.toUpperCase();
-        DfyItem item = PLUGIN.getItem(id);
+        DfyItem item = FileManager.getItem(id);
         if (item == null) {
             commandSender.sendMessage(Component.text(PLUGIN.getPrefix() + "No item found with ID §6'" + id + "'§e!"));
             return true;

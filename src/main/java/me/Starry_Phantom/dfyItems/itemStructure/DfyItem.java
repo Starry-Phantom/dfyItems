@@ -1,5 +1,9 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Consumable;
+import io.papermc.paper.datacomponent.item.Equippable;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
@@ -7,12 +11,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -32,8 +34,8 @@ public class DfyItem extends DfyStructure {
     private ArrayList<DfyEnchantment> enchantments;
     private ArrayList<String> abilities;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
-    private EquipmentSlot wearable;
-    private String equipSound;
+
+    private Map<String, Object> consumable, equippable;
 
     public DfyItem(File loadFile, int index) {
         super(loadFile, index);
@@ -51,11 +53,6 @@ public class DfyItem extends DfyStructure {
         setName(meta);
         setModel(meta);
         setGlint(meta);
-        setWearable(meta);
-
-        // AWAITING PAPER API UPDATE
-        //setConsumable(meta)
-        //setBlocking(meta)
 
         ArrayList<TextComponent> lore = new ArrayList<>();
 
@@ -81,7 +78,67 @@ public class DfyItem extends DfyStructure {
         if (lore.getLast().equals(Component.text(""))) lore.removeLast();
         meta.lore(lore);
         item.setItemMeta(meta);
+
+        setEquippable(item);
+        setConsumable(item);
+
         return item;
+    }
+
+    private void setConsumable(ItemStack item) {
+        if (consumable == null) return;
+
+        Consumable.Builder c = Consumable.consumable();
+
+        if (consumable.containsKey("consume_seconds")) {
+            Number time = (Number) consumable.get("consume_seconds");
+            c.consumeSeconds(time.floatValue());
+        }
+
+        if (consumable.containsKey("animation")) {
+            ItemUseAnimation animation = ItemUseAnimation.valueOf((String) consumable.get("animation"));
+            c.animation(animation);
+        }
+
+        if (consumable.containsKey("sound")) {
+            c.sound(new NamespacedKey("minecraft", (String) consumable.get("sound")));
+        }
+
+        if (consumable.containsKey("has_consume_particles")) {
+            c.hasConsumeParticles((Boolean) consumable.get("has_consume_particles"));
+        }
+
+        item.setData(DataComponentTypes.CONSUMABLE, c.build());
+    }
+
+    private void setEquippable(ItemStack item) {
+        if (equippable == null && data.containsKey("equippable")) {
+            item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HAND));
+            return;
+        }
+        if (equippable == null) return;
+
+        if (!equippable.containsKey("slot")) {
+            item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HAND));
+            return;
+        }
+
+        Equippable.Builder e = Equippable.equippable(EquipmentSlot.valueOf((String) equippable.get("slot")));
+
+        if (equippable.containsKey("asset_id")) {
+            String id = (String) equippable.get("asset_id");
+            NamespacedKey key;
+            if (Arrays.asList("diamond", "chainmail", "iron", "netherite", "leather", "turtle_scute", "gold", "elytra").contains(id)) {
+                key = new NamespacedKey("minecraft", id);
+            } else key = new NamespacedKey("dfyitems", id);
+
+            e.assetId(key);
+        }
+
+        if (equippable.containsKey("equip_sound")) e.equipSound(new NamespacedKey("minecraft", (String) equippable.get("equip_sound")));
+        if (equippable.containsKey("swappable")) e.swappable((Boolean) equippable.get("swappable"));
+
+        item.setData(DataComponentTypes.EQUIPPABLE, e.build());
     }
 
     private void addRarityNBT(ItemMeta meta) {
@@ -203,24 +260,6 @@ public class DfyItem extends DfyStructure {
         return builder.toString();
     }
 
-    private void setWearable(ItemMeta meta) {
-        EquippableComponent eq = meta.getEquippable();
-        if (!wearableNull && wearable == null) return;
-        if (wearable == null) {
-            eq.setSlot(EquipmentSlot.HAND);
-            meta.setEquippable(eq);
-            return;
-        }
-        eq.setSlot(wearable);
-
-        if (equipSound != null) {
-            NamespacedKey key = new NamespacedKey("minecraft", equipSound);
-            eq.setEquipSound(Registry.SOUNDS.get(key));
-        }
-
-        meta.setEquippable(eq);
-    }
-
     private void setGlint(ItemMeta meta) {
         if (glintNull) return;
         meta.setEnchantmentGlintOverride(glint);
@@ -228,16 +267,11 @@ public class DfyItem extends DfyStructure {
 
     private void setModel(ItemMeta meta) {
         if (model == null) return;
-        if (Material.valueOf(model) != null) {
+        try {
+            Material m = Material.valueOf(model);
             meta.setItemModel(new NamespacedKey("minecraft", model.toLowerCase()));
-        }
-        else {
-            meta.setItemModel(new NamespacedKey("dfyitems","held." + model));
-            if (!wearableNull) {
-                EquippableComponent eq = meta.getEquippable();
-                eq.setModel(new NamespacedKey("dfyItems", "worn." + model));
-                meta.setEquippable(eq);
-            }
+        } catch (IllegalArgumentException e) {
+            meta.setItemModel(new NamespacedKey("dfyitems", model));
         }
     }
 
@@ -312,16 +346,17 @@ public class DfyItem extends DfyStructure {
         abilities = new ArrayList<>();
         loadArrayList("abilities", abilities, String.class);
 
-        wearableNull = initField("wearable", null, EquipmentSlot.class);
-
-        initField("equipSound", null);
-        if (equipSound == null) equipSound = "item.armor_equip.generic";
-
         initField("name", material.toString());
         glintNull = !initField("glint", false);
 
         loadEnchants();
         loadStats();
+
+        if (data.containsKey("consumable")) consumable = (Map<String, Object>) data.get("consumable");
+        else consumable = null;
+
+        if (data.containsKey("equippable")) equippable = (Map<String, Object>) data.get("equippable");
+        else equippable = null;
 
         for (String s : new String[]{"rarity", "type", "longLore", "shortLore", "model"}) {
             initField(s, "");

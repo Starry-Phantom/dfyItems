@@ -1,11 +1,14 @@
 name: dfyItems
-version: '1.1.0-SNAPSHOT'
+version: '1.2.0'
 main: me.Starry_Phantom.dfyItems.DfyItems
 api-version: '1.21'
 authors: [ Starry_Phantom ]
 permissions:
   dfyitems.manage:
     description: Allows reloading items/abilities/scripts/etc
+    default: op
+  dfyitems.transmute:
+    description: Allows access to the /transmute command
     default: op
   dfyitems.get.access:
     description: Allows access to the /get command
@@ -24,3 +27,9 @@ commands:
     description: Core plugin functions. Run for /dfyitems help for help!
     usage: /dfyitems
     aliases: dfi
+  transmute:
+    description: 'Transmutes 1 item into another :3'
+    usage: /transmute <item id>
+  enchant:
+    description: 'Enchants items'
+    usage: /enchant [add|remove] <name> [level]

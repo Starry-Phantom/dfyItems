@@ -1,11 +1,7 @@
 package me.Starry_Phantom.dfyItems;
 
-import me.Starry_Phantom.dfyItems.Commands.CoreCommands;
-import me.Starry_Phantom.dfyItems.Commands.GetCommand;
-import me.Starry_Phantom.dfyItems.Core.AbilityHandler;
-import me.Starry_Phantom.dfyItems.Core.FileManager;
-import me.Starry_Phantom.dfyItems.Core.StructureLoader;
-import me.Starry_Phantom.dfyItems.Core.TextUtilities;
+import me.Starry_Phantom.dfyItems.Commands.*;
+import me.Starry_Phantom.dfyItems.Core.*;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -42,6 +38,7 @@ public final class DfyItems extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         FileManager.deleteCompiledFolder();
+        FileManager.saveEpochs(FileManager.getEpochFile());
     }
 
     private void passPluginToClasses() {
@@ -55,12 +52,14 @@ public final class DfyItems extends JavaPlugin {
     private void registerCommands() {
         this.getCommand("get").setExecutor(new GetCommand(this));
         this.getCommand("dfyitems").setExecutor(new CoreCommands(this));
-
+        this.getCommand("transmute").setExecutor(new TransmuteCommand(this));
+        this.getCommand("enchant").setExecutor(new EnchantCommand(this));
     }
 
     private void registerEventListeners() {
         AbilityHandler abilityHandler = FileManager.createAbilityHandler();
         Bukkit.getPluginManager().registerEvents(abilityHandler, this);
+        Bukkit.getPluginManager().registerEvents(new ItemUpdateHandler(this), this);
     }
 
 
@@ -87,6 +86,7 @@ public final class DfyItems extends JavaPlugin {
     public String getPermissionPrefix() {
         return PERMISSION_PREFIX;
     }
+    public String getPermissionMessage() {return PERMISSION_PREFIX + " You do not have permission to run this command.";}
 
     public String getErrorPrefix() {
         return ERROR_PREFIX;

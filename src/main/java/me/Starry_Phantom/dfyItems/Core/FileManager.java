@@ -5,14 +5,17 @@ import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public class FileManager {
@@ -27,6 +30,9 @@ public class FileManager {
     private static File abilityFolder;
     private static File compiledFoler;
 
+    private static File epochFile, backupEpochFile;
+    private static Map<String, Integer> EPOCHS;
+
     public static void setPlugin(DfyItems plugin) {PLUGIN = plugin;}
 
     public static boolean initialize() {
@@ -40,8 +46,70 @@ public class FileManager {
         if (initResult) PLUGIN.log("Loaded settings from config!");
 
         loadDfyStructures();
+        loadEpochs();
+
+        establishAutoSave();
 
         return true;
+    }
+
+    private static void loadEpochs() {
+        Yaml yaml = new Yaml();
+        try (InputStream input = new FileInputStream(epochFile)) {
+            Map<String, Integer> temp = yaml.load(input);
+            if (temp == null) EPOCHS = new ConcurrentHashMap<>();
+            else {
+                EPOCHS = new ConcurrentHashMap<>(temp);
+            }
+            if (!EPOCHS.containsKey("GLOBAL")) EPOCHS.put("GLOBAL", 0);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static int getGlobalEpoch() {
+        return EPOCHS.get("GLOBAL");
+    }
+
+    public static int getItemEpoch(String id) {
+        if (EPOCHS.containsKey(id)) return EPOCHS.get(id);
+        EPOCHS.put(id, 0);
+        return 0;
+    }
+
+    private static void establishAutoSave() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                FileManager.saveEpochs(epochFile);
+            }
+        }.runTaskTimerAsynchronously(PLUGIN, 20 * 60 * 5, 20 * 60 * 10);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                FileManager.saveEpochs(backupEpochFile);
+            }
+        }.runTaskTimerAsynchronously(PLUGIN, 20 * 60 * 10, 20 * 60 * 10);
+    }
+
+    public static void saveEpochs(File file) {
+        try {
+            DumperOptions options = new DumperOptions();
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            Yaml yaml = new Yaml(options);
+            FileWriter writer = new FileWriter(file);
+            yaml.dump(EPOCHS, writer);
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private static void increaseEpoch(String id) {
+        if (EPOCHS.containsKey(id)) EPOCHS.replace(id, EPOCHS.get(id) + 1);
+        else EPOCHS.put(id, 0);
     }
 
     private static boolean loadFiles() {
@@ -54,6 +122,9 @@ public class FileManager {
         File scriptFolder = makeFolderIfMissing("scripts");
         File abilityFolder = makeFolderIfMissing("abilities");
         File compileFolder = makeFolderIfMissing(COMPILED_FOLDER_NAMESPACE);
+
+        epochFile = makeFileIfMissing("item_epochs.yml");
+        backupEpochFile = makeFileIfMissing("item_epochs_backup.yml");
 
         File config = new File(dataFolder, "config.yml");
         if (!config.exists()) {
@@ -68,6 +139,19 @@ public class FileManager {
             }
         }
         return true;
+    }
+
+    private static File makeFileIfMissing(String path) {
+        File file = new File(PLUGIN.getDataFolder(), path);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+                return file;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return file;
     }
 
     private static File makeFolderIfMissing(String query) {
@@ -106,6 +190,7 @@ public class FileManager {
         if (storage.isEmpty()) return;
 
         if (clazz == DfyItem.class) for (String key : keys) {
+            increaseEpoch(key);
             if (ITEMS.containsKey(key)) ITEMS.replace(key, (DfyItem) storage.get(key));
             else ITEMS.put(key, (DfyItem) storage.get(key));
         }
@@ -137,7 +222,10 @@ public class FileManager {
                     break;
                 }
             }
-            if (found) ITEMS.replace(i.getID(), new DfyItem(i.getSourceFile(), i.getIndex()));
+            if (found) {
+                increaseEpoch(i.getID());
+                ITEMS.replace(i.getID(), new DfyItem(i.getSourceFile(), i.getIndex()));
+            }
 
         }
 
@@ -186,5 +274,9 @@ public class FileManager {
         } catch (IOException ignored) {}
 
         compiledFoler.delete();
+    }
+
+    public static File getEpochFile() {
+        return epochFile;
     }
 }

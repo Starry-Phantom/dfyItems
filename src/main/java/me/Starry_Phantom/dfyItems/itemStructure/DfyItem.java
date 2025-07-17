@@ -1,5 +1,9 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Consumable;
+import io.papermc.paper.datacomponent.item.Equippable;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
@@ -7,12 +11,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -24,6 +27,7 @@ public class DfyItem extends DfyStructure {
     private static final String NEGATIVE_STAT_COLOR = "§r§c";
     private static final String POSITIVE_STAT_COLOR = "§r§9+";
 
+    private ItemStack item;
     private String name;
     private String rarity, type, model;
     private Material material;
@@ -32,16 +36,69 @@ public class DfyItem extends DfyStructure {
     private ArrayList<DfyEnchantment> enchantments;
     private ArrayList<String> abilities;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
-    private EquipmentSlot wearable;
-    private String equipSound;
+
+    private Map<String, Object> consumable, equippable;
 
     public DfyItem(File loadFile, int index) {
         super(loadFile, index);
         if (THROWN_LOAD_ERROR) return;
     }
 
+    public static DfyItem getBaseItem(ItemStack item) {
+        if (!isValidItem(item)) return null;
+        return FileManager.getItem(getItemID(item));
+    }
+
+    public static void setEnchants(ItemStack item, ArrayList<DfyEnchantment> enchants, String type) {
+        if (enchants == null) return;
+        if (enchants.isEmpty()) return;
+        ItemMeta meta = item.getItemMeta();
+
+        NamespacedKey enchantKey = new NamespacedKey(PLUGIN, "enchantments");
+
+        PersistentDataContainer root = meta.getPersistentDataContainer();
+        PersistentDataContainer enchantContainer = root.get(enchantKey, PersistentDataType.TAG_CONTAINER);
+        if (enchantContainer == null) {
+            enchantContainer =  root.getAdapterContext().newPersistentDataContainer();
+        }
+
+        enchantContainer.set(new NamespacedKey(PLUGIN, type), PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchants));
+
+        root.set(enchantKey, PersistentDataType.TAG_CONTAINER, enchantContainer);
+        item.setItemMeta(meta);
+    }
+
+    public static void setAppliedEnchants(ItemStack item, ArrayList<DfyEnchantment> enchants) {
+        setEnchants(item, enchants, "applied");
+    }
+
+    public static void setDefaultEnchants(ItemStack item, ArrayList<DfyEnchantment> enchants) {
+        setEnchants(item, enchants, "default");
+    }
+
+    public static int getEpochOf(ItemStack item) {
+        if (!isValidItem(item)) return -1;
+        return item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER).get(new NamespacedKey(PLUGIN, getItemID(item)), PersistentDataType.INTEGER);
+    }
+
+    public static int getGlobalEpochOf(ItemStack item) {
+        if (!isValidItem(item)) return -1;
+        return item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER).get(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER);
+    }
+
+
     private ItemStack build() {
         ItemStack item = new ItemStack(material);
+        buildNBT(item);
+
+        ItemMeta meta = item.getItemMeta();
+        meta.lore(buildLore());
+        item.setItemMeta(meta);
+
+        return item;
+    }
+
+    private void buildNBT(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         meta.setUnbreakable(true);
 
@@ -51,37 +108,140 @@ public class DfyItem extends DfyStructure {
         setName(meta);
         setModel(meta);
         setGlint(meta);
-        setWearable(meta);
 
-        // AWAITING PAPER API UPDATE
-        //setConsumable(meta)
-        //setBlocking(meta)
+        if (rarity != null && type != null) {
+            addRarityNBT(meta);
+        }
 
-        ArrayList<TextComponent> lore = new ArrayList<>();
 
-        addShortLore(lore);
-        addRarityDisplay(lore);
-        addRarityNBT(meta);
+        if (enchantments != null) {
+            addEnchantmentNBT(meta);
+            meta.addEnchant(Enchantment.MENDING, 1, true);
+        }
 
-        addLongLore(lore);
-
-        addEnchantments(lore);
-        addEnchantmentNBT(meta);
-
-        addAbilityLore(lore);
-        addAbilityNBT(meta);
+        if (!abilities.isEmpty()) {
+            addAbilityNBT(meta);
+        }
 
         // TODO: Mystic Enchants go here! (Adding also in a future update...)
 
         // TODO: Kill effects go here! (Adding in future update...)
 
-        addStatLore(lore);
-        addStatNBT(meta);
+        if (stats != null) {
+            addStatNBT(meta);
+        }
 
-        if (lore.getLast().equals(Component.text(""))) lore.removeLast();
-        meta.lore(lore);
+        addEpochNBT(meta);
+
         item.setItemMeta(meta);
-        return item;
+
+        setEquippable(item);
+        setConsumable(item);
+    }
+
+    private void addEpochNBT(ItemMeta meta) {
+        PersistentDataContainer root = meta.getPersistentDataContainer();
+        PersistentDataContainer epochs = root.getAdapterContext().newPersistentDataContainer();
+
+        epochs.set(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER, FileManager.getGlobalEpoch());
+        epochs.set(new NamespacedKey(PLUGIN, STRUCTURE_ID), PersistentDataType.INTEGER, FileManager.getItemEpoch(STRUCTURE_ID));
+        root.set(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER, epochs);
+    }
+
+    public ArrayList<TextComponent> buildLore() {return buildLore(enchantments);}
+
+    public ArrayList<TextComponent> buildLore(ArrayList<DfyEnchantment> enchantments) {
+        ArrayList<TextComponent> lore = new ArrayList<>();
+
+        if (shortLore != null) lore.add(getShortLore());
+
+        if (rarity != null && type != null) {
+            lore.add(getRarityDisplayLore());
+            lore.add(Component.text(""));
+        }
+
+        if (longLore != null) {
+            lore.addAll(getLongLore());
+            lore.add(Component.text(""));
+        }
+
+        if (enchantments != null) {
+            lore.addAll(getEnchantmentLore(enchantments));
+            lore.add(Component.text(""));
+        }
+
+        if (!abilities.isEmpty()) {
+            lore.addAll(getAbilityLore());
+            lore.add(Component.text(""));
+        }
+
+        // TODO: Mystic Enchants go here! (Adding also in a future update...)
+
+        // TODO: Kill effects go here! (Adding in future update...)
+
+        if (stats != null) {
+            lore.addAll(getStatLore());
+        }
+
+        if (!lore.isEmpty() && lore.getLast().equals(Component.text(""))) lore.removeLast();
+
+        return lore;
+    }
+
+    private void setConsumable(ItemStack item) {
+        if (consumable == null) return;
+
+        Consumable.Builder c = Consumable.consumable();
+
+        if (consumable.containsKey("consume_seconds")) {
+            Number time = (Number) consumable.get("consume_seconds");
+            c.consumeSeconds(time.floatValue());
+        }
+
+        if (consumable.containsKey("animation")) {
+            ItemUseAnimation animation = ItemUseAnimation.valueOf((String) consumable.get("animation"));
+            c.animation(animation);
+        }
+
+        if (consumable.containsKey("sound")) {
+            c.sound(new NamespacedKey("minecraft", (String) consumable.get("sound")));
+        }
+
+        if (consumable.containsKey("has_consume_particles")) {
+            c.hasConsumeParticles((Boolean) consumable.get("has_consume_particles"));
+        }
+
+        item.setData(DataComponentTypes.CONSUMABLE, c.build());
+    }
+
+    private void setEquippable(ItemStack item) {
+        if (equippable == null && data.containsKey("equippable")) {
+            item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HAND));
+            return;
+        }
+        if (equippable == null) return;
+
+        if (!equippable.containsKey("slot")) {
+            item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HAND));
+            return;
+        }
+
+        Equippable.Builder e = Equippable.equippable(EquipmentSlot.valueOf((String) equippable.get("slot")));
+
+        if (equippable.containsKey("asset_id")) {
+            String id = (String) equippable.get("asset_id");
+            NamespacedKey key;
+            if (Arrays.asList("diamond", "chainmail", "iron", "netherite", "leather", "turtle_scute", "gold", "elytra").contains(id)) {
+                key = new NamespacedKey("minecraft", id);
+            } else key = new NamespacedKey("dfyitems", id);
+
+            e.assetId(key);
+        }
+
+        if (equippable.containsKey("equip_sound")) e.equipSound(new NamespacedKey("minecraft", (String) equippable.get("equip_sound")));
+        if (equippable.containsKey("swappable")) e.swappable((Boolean) equippable.get("swappable"));
+
+        item.setData(DataComponentTypes.EQUIPPABLE, e.build());
     }
 
     private void addRarityNBT(ItemMeta meta) {
@@ -129,12 +289,15 @@ public class DfyItem extends DfyStructure {
         return String.join(DELIMITER, statNBTBlock);
     }
 
-    private void addStatLore(ArrayList<TextComponent> lore) {
-        if (stats == null) return;
+    private ArrayList<TextComponent> getStatLore() {
+        if (stats == null) return null;
+        ArrayList<TextComponent> lore = new ArrayList<>();
         for (Map<TriggerSlot, ArrayList<Map<String, Object>>> stat : stats) {
             lore.addAll(TextUtilities.insertIntoComponents(createStatBlock(stat)));
             lore.add(Component.text(""));
         }
+        lore.removeLast();
+        return lore;
     }
 
     private ArrayList<String> createStatBlock(Map<TriggerSlot, ArrayList<Map<String, Object>>> statBlock) {
@@ -171,54 +334,23 @@ public class DfyItem extends DfyStructure {
 
     private void addEnchantmentNBT(ItemMeta meta) {
         if (enchantments == null) return;
-        NamespacedKey key = new NamespacedKey(PLUGIN, "enchantment");
-        StringBuilder enchantBlock = new StringBuilder();
-        for (int i = 0; i < enchantments.size(); i++) {
-            DfyEnchantment e = enchantments.get(i);
-            enchantBlock.append(e.getID());
-            enchantBlock.append(SUB_DELIMITER);
-            enchantBlock.append(e.getLevel());
-            if (i < enchantments.size() - 1) enchantBlock.append(DELIMITER);
-        }
-        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, enchantBlock.toString());
+        NamespacedKey topKey = new NamespacedKey(PLUGIN, "enchantments");
+
+        PersistentDataContainer root = meta.getPersistentDataContainer();
+        PersistentDataContainer enchantStorage = root.getAdapterContext().newPersistentDataContainer();
+
+        NamespacedKey enchantmentKey = new NamespacedKey(PLUGIN, "default");
+        enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
+        enchantStorage.set(new NamespacedKey(PLUGIN, "applied"), PersistentDataType.STRING, "");
+
+        root.set(topKey, PersistentDataType.TAG_CONTAINER, enchantStorage);
 
     }
 
-    private void addEnchantments(ArrayList<TextComponent> lore) {
-        if (enchantments == null) return;
-        String enchantString = buildEnchantString();
-        lore.addAll(TextUtilities.insertIntoComponents(TextUtilities.wrapText(enchantString, ENCHANT_COLOR)));
-        lore.add(Component.text(""));
-    }
-
-    private String buildEnchantString() {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < enchantments.size(); i++) {
-            DfyEnchantment e = enchantments.get(i);
-            builder.append(e.getName());
-            builder.append(" ");
-            builder.append(e.getRomanLevel());
-            if (i < enchantments.size()-1) builder.append(", ");
-        }
-        return builder.toString();
-    }
-
-    private void setWearable(ItemMeta meta) {
-        EquippableComponent eq = meta.getEquippable();
-        if (!wearableNull && wearable == null) return;
-        if (wearable == null) {
-            eq.setSlot(EquipmentSlot.HAND);
-            meta.setEquippable(eq);
-            return;
-        }
-        eq.setSlot(wearable);
-
-        if (equipSound != null) {
-            NamespacedKey key = new NamespacedKey("minecraft", equipSound);
-            eq.setEquipSound(Registry.SOUNDS.get(key));
-        }
-
-        meta.setEquippable(eq);
+    public ArrayList<TextComponent> getEnchantmentLore(ArrayList<DfyEnchantment> enchantments) {
+        if (enchantments == null) return null;
+        String enchantString = DfyEnchantment.buildEnchantString(enchantments);
+        return TextUtilities.insertIntoComponents(TextUtilities.wrapText(enchantString, ENCHANT_COLOR));
     }
 
     private void setGlint(ItemMeta meta) {
@@ -228,16 +360,11 @@ public class DfyItem extends DfyStructure {
 
     private void setModel(ItemMeta meta) {
         if (model == null) return;
-        if (Material.valueOf(model) != null) {
+        try {
+            Material m = Material.valueOf(model);
             meta.setItemModel(new NamespacedKey("minecraft", model.toLowerCase()));
-        }
-        else {
-            meta.setItemModel(new NamespacedKey("dfyitems","held." + model));
-            if (!wearableNull) {
-                EquippableComponent eq = meta.getEquippable();
-                eq.setModel(new NamespacedKey("dfyItems", "worn." + model));
-                meta.setEquippable(eq);
-            }
+        } catch (IllegalArgumentException e) {
+            meta.setItemModel(new NamespacedKey("dfyitems", model));
         }
     }
 
@@ -258,7 +385,7 @@ public class DfyItem extends DfyStructure {
         meta.customName(TextUtilities.applyHexColoring("§r§f" + name));
     }
 
-    private static void hideFlags(ItemMeta meta) {
+    private void hideFlags(ItemMeta meta) {
         meta.addItemFlags(
                 ItemFlag.HIDE_ARMOR_TRIM,
                 ItemFlag.HIDE_ATTRIBUTES,
@@ -268,8 +395,9 @@ public class DfyItem extends DfyStructure {
         );
     }
 
-    private void addAbilityLore(ArrayList<TextComponent> lore) {
+    private ArrayList<TextComponent> getAbilityLore() {
         if (!abilities.isEmpty()) {
+            ArrayList<TextComponent> lore = new ArrayList<>();
             for (String s : abilities) {
                 DfyAbility ability = FileManager.getAbility(s);
                 if (ability == null) {
@@ -279,26 +407,27 @@ public class DfyItem extends DfyStructure {
                 lore.addAll(TextUtilities.insertIntoComponents(ability.getLoreBlock()));
                 lore.add(Component.text(""));
             }
+            lore.removeLast();
+            return lore;
         }
+        return null;
     }
 
-    private void addLongLore(ArrayList<TextComponent> lore) {
-        if (longLore != null) {
-            lore.addAll(TextUtilities.insertIntoComponents(TextUtilities.wrapText(longLore)));
-            lore.add(Component.text(""));
-        }
+    private ArrayList<TextComponent> getLongLore() {
+        if (longLore != null) return TextUtilities.insertIntoComponents(TextUtilities.wrapText(longLore));
+        return null;
     }
 
-    private void addRarityDisplay(ArrayList<TextComponent> lore) {
-        lore.add(TextUtilities.applyHexColoring("§r§8" +
+    private TextComponent getRarityDisplayLore() {
+        if (rarity == null && type == null) return null;
+        return TextUtilities.applyHexColoring("§r§8" +
                 ((rarity != null) ? rarity : "null") + " §r§8" +
-                ((type != null) ? type : "item")));
-
-        lore.add(Component.text(""));
+                ((type != null) ? type : "item"));
     }
 
-    private void addShortLore(ArrayList<TextComponent> lore) {
-        if (shortLore != null) lore.add(TextUtilities.applyHexColoring("§r§7" + shortLore));
+    private TextComponent getShortLore() {
+        if (shortLore != null) return TextUtilities.applyHexColoring("§r§7" + shortLore);
+        return null;
     }
 
     @Override
@@ -312,16 +441,19 @@ public class DfyItem extends DfyStructure {
         abilities = new ArrayList<>();
         loadArrayList("abilities", abilities, String.class);
 
-        wearableNull = initField("wearable", null, EquipmentSlot.class);
-
-        initField("equipSound", null);
-        if (equipSound == null) equipSound = "item.armor_equip.generic";
-
         initField("name", material.toString());
         glintNull = !initField("glint", false);
 
         loadEnchants();
+        if (enchantments != null) DfyStructure.sortAlphabetical(enchantments);
+
         loadStats();
+
+        if (data.containsKey("consumable")) consumable = (Map<String, Object>) data.get("consumable");
+        else consumable = null;
+
+        if (data.containsKey("equippable")) equippable = (Map<String, Object>) data.get("equippable");
+        else equippable = null;
 
         for (String s : new String[]{"rarity", "type", "longLore", "shortLore", "model"}) {
             initField(s, "");
@@ -354,13 +486,14 @@ public class DfyItem extends DfyStructure {
         for (Map<String, Object> enchant : enchantLoader) {
             String enchantName = (String) enchant.keySet().toArray()[0];
             Integer level = (Integer) enchant.get(enchantName);
-            enchantments.add(new DfyEnchantment(enchantName, level));
+            enchantments.add(new DfyEnchantment(enchantName, level, false));
         }
     }
 
     public ItemStack getItem() {
         if (THROWN_LOAD_ERROR) return null;
-        return build();
+        if (item == null) item = build();
+        return item;
     }
 
     public static boolean isValidItem(ItemStack item) {
@@ -373,6 +506,44 @@ public class DfyItem extends DfyStructure {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return null;
         return meta.getPersistentDataContainer().get(new NamespacedKey(PLUGIN,"id"), PersistentDataType.STRING);
+    }
+
+
+    public static ItemStack transmuteItem(ItemStack item, String id) {
+        return transmuteItem(item, FileManager.getItem(id));
+    }
+
+    public static ItemStack transmuteItem(ItemStack item, DfyItem target) {
+        if (target == null) {
+            PLUGIN.warn("Failed to transmute item! Target is invalid!");
+            return item;
+        }
+
+        if (!DfyItem.isValidItem(item)) return item;
+
+        ItemStack transItem = target.build();
+
+        ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
+        DfyEnchantment.applyEnchantments(transItem, enchants);
+
+        return transItem;
+    }
+
+
+    public static ItemStack updateItem(ItemStack item) {
+        if (!isValidItem(item)) {
+            PLUGIN.warn("Failed to update item! Target is invalid!");
+            return item;
+        }
+
+        DfyItem base = getBaseItem(item);
+
+        ItemStack updateItem = base.build();
+
+        ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
+        DfyEnchantment.applyEnchantments(updateItem, enchants);
+
+        return updateItem;
     }
 
     public ArrayList<String> getAbilities() {

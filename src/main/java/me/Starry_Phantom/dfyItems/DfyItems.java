@@ -38,7 +38,7 @@ public final class DfyItems extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         FileManager.deleteCompiledFolder();
-        FileManager.saveEpochs(FileManager.getEpochFile());
+        FileManager.finalSaveEpochs(FileManager.getEpochFile());
     }
 
     private void passPluginToClasses() {

@@ -92,10 +92,18 @@ public class DfyItem extends DfyStructure {
         buildNBT(item);
 
         ItemMeta meta = item.getItemMeta();
-        meta.lore(buildLore());
+        meta.lore(DfyItem.loreBuilder(this).build());
         item.setItemMeta(meta);
 
         return item;
+    }
+
+    public static DfyItemLoreBuilder loreBuilder(DfyItem dfyItem) {
+        return new DfyItemLoreBuilder(dfyItem);
+    }
+
+    public DfyItemLoreBuilder loreBuilder() {
+        return new DfyItemLoreBuilder(this);
     }
 
     private void buildNBT(ItemStack item) {
@@ -146,46 +154,6 @@ public class DfyItem extends DfyStructure {
         epochs.set(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER, FileManager.getGlobalEpoch());
         epochs.set(new NamespacedKey(PLUGIN, STRUCTURE_ID), PersistentDataType.INTEGER, FileManager.getItemEpoch(STRUCTURE_ID));
         root.set(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER, epochs);
-    }
-
-    public ArrayList<TextComponent> buildLore() {return buildLore(enchantments);}
-
-    public ArrayList<TextComponent> buildLore(ArrayList<DfyEnchantment> enchantments) {
-        ArrayList<TextComponent> lore = new ArrayList<>();
-
-        if (shortLore != null) lore.add(getShortLore());
-
-        if (rarity != null && type != null) {
-            lore.add(getRarityDisplayLore());
-            lore.add(Component.text(""));
-        }
-
-        if (longLore != null) {
-            lore.addAll(getLongLore());
-            lore.add(Component.text(""));
-        }
-
-        if (enchantments != null) {
-            lore.addAll(getEnchantmentLore(enchantments));
-            lore.add(Component.text(""));
-        }
-
-        if (!abilities.isEmpty()) {
-            lore.addAll(getAbilityLore());
-            lore.add(Component.text(""));
-        }
-
-        // TODO: Mystic Enchants go here! (Adding also in a future update...)
-
-        // TODO: Kill effects go here! (Adding in future update...)
-
-        if (stats != null) {
-            lore.addAll(getStatLore());
-        }
-
-        if (!lore.isEmpty() && lore.getLast().equals(Component.text(""))) lore.removeLast();
-
-        return lore;
     }
 
     private void setConsumable(ItemStack item) {
@@ -289,7 +257,7 @@ public class DfyItem extends DfyStructure {
         return String.join(DELIMITER, statNBTBlock);
     }
 
-    private ArrayList<TextComponent> getStatLore() {
+    public ArrayList<TextComponent> getStatLore() {
         if (stats == null) return null;
         ArrayList<TextComponent> lore = new ArrayList<>();
         for (Map<TriggerSlot, ArrayList<Map<String, Object>>> stat : stats) {
@@ -395,7 +363,7 @@ public class DfyItem extends DfyStructure {
         );
     }
 
-    private ArrayList<TextComponent> getAbilityLore() {
+    public ArrayList<TextComponent> getAbilityLore() {
         if (!abilities.isEmpty()) {
             ArrayList<TextComponent> lore = new ArrayList<>();
             for (String s : abilities) {
@@ -413,19 +381,19 @@ public class DfyItem extends DfyStructure {
         return null;
     }
 
-    private ArrayList<TextComponent> getLongLore() {
+    public ArrayList<TextComponent> getLongLore() {
         if (longLore != null) return TextUtilities.insertIntoComponents(TextUtilities.wrapText(longLore));
         return null;
     }
 
-    private TextComponent getRarityDisplayLore() {
+    public TextComponent getRarityDisplayLore() {
         if (rarity == null && type == null) return null;
         return TextUtilities.applyHexColoring("§r§8" +
                 ((rarity != null) ? rarity : "null") + " §r§8" +
                 ((type != null) ? type : "item"));
     }
 
-    private TextComponent getShortLore() {
+    public TextComponent getShortLore() {
         if (shortLore != null) return TextUtilities.applyHexColoring("§r§7" + shortLore);
         return null;
     }
@@ -548,5 +516,17 @@ public class DfyItem extends DfyStructure {
 
     public ArrayList<String> getAbilities() {
         return abilities;
+    }
+
+    public ArrayList<DfyEnchantment> getEnchantments() {
+        return enchantments;
+    }
+
+    public String getRarity() {
+        return rarity;
+    }
+
+    public String getType() {
+        return type;
     }
 }

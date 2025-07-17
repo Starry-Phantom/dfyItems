@@ -12,9 +12,10 @@ import org.bukkit.persistence.PersistentDataType;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class DfyAbility extends DfyStructure {
-    private String displayName, lore, restriction, path, className;
+    private String displayName, lore, path, className;
     private boolean enabled;
     ArrayList<TriggerSlot> triggerSlots;
     ArrayList<TriggerCase> triggerCases;
@@ -37,9 +38,47 @@ public class DfyAbility extends DfyStructure {
 
     public ArrayList<String> getLoreBlock() {
         ArrayList<String> loreBlock = new ArrayList<>();
-        loreBlock.add("§r§6" + displayName);
+        if (displayName != null) loreBlock.add("§r§6" + displayName);
         if (lore != null && !lore.isEmpty()) loreBlock.addAll(TextUtilities.wrapText(lore, "§r§7"));
         return loreBlock;
+    }
+
+    public boolean equals(DfyAbility ability) {
+        if (!Objects.equals(displayName, ability.getDisplayName())) {
+            return false;
+        }
+
+        if (!Objects.equals(lore, ability.getLore())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean deepEquals(DfyAbility ability) {
+        if (!path.equals(ability.getPath())) {
+            return false;
+        }
+        if (!Objects.equals(displayName, ability.getDisplayName())) {
+            return false;
+        }
+
+        if (!Objects.equals(lore, ability.getLore())) {
+            return false;
+        }
+
+        if (!Objects.equals(triggerCases, ability.getTriggerCases())) {
+            return false;
+        }
+
+        if (!Objects.equals(triggerSlots, ability.getTriggerSlots())) {
+            return false;
+        }
+
+        if (enabled != ability.isEnabled()) {
+            return false;
+        }
+        return true;
     }
 
     public String getPath() {
@@ -48,7 +87,7 @@ public class DfyAbility extends DfyStructure {
 
     @Override
     protected boolean loadData() {
-        for (String s : new String[]{"displayName", "lore", "restriction"}) {
+        for (String s : new String[]{"displayName", "lore"}) {
             initField(s, "");
         }
         initField("enabled", false);
@@ -96,6 +135,9 @@ public class DfyAbility extends DfyStructure {
 
     public String getClassName() {
         return className;
+    }
+    public String getLore() {
+        return lore;
     }
 
     public String getDisplayName() {

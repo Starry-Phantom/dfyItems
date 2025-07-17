@@ -76,7 +76,7 @@ public class DfyEnchantment extends DfyStructure {
         DfyItem baseItem = DfyItem.getBaseItem(item);
         if (!meta.hasEnchant(Enchantment.MENDING)) meta.addEnchant(Enchantment.MENDING, 1, true);
 
-        ArrayList<TextComponent> lore = baseItem.buildLore(allEnchants);
+        ArrayList<TextComponent> lore = baseItem.loreBuilder().enchants(allEnchants).build();
         meta.lore(lore);
 
         item.setItemMeta(meta);
@@ -124,7 +124,7 @@ public class DfyEnchantment extends DfyStructure {
         ItemMeta meta = item.getItemMeta();
         ArrayList<DfyEnchantment> allEnchants = new ArrayList<>(appliedEnchants);
         allEnchants.addAll(defEnchants);
-        meta.lore(base.buildLore(allEnchants));
+        meta.lore(base.loreBuilder().enchants(allEnchants).build());
         item.setItemMeta(meta);
 
         DfyItem.setAppliedEnchants(item, appliedEnchants);

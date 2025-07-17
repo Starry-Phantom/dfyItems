@@ -27,15 +27,15 @@ public class TextUtilities {
         if (configLength == null) wrapLength = 32;
         else wrapLength = Integer.parseInt(configLength);
 
-        text = wrapColor + text;
+        int limit = wrapLength;
 
         for (int j = 0; j < text.length(); j++) {
-            int limit = wrapLength;
+            if (j == 0) limit = wrapLength;
 
-            if (text.charAt(j) == '§') limit+=2;
+            if (text.charAt(j) == '§') limit += 2;
             if (text.charAt(j) == '\n') {
-                output.add(wrapColor + text.substring(0,j));
-                text = wrapColor + text.substring(j + 1);
+                output.add(wrapColor + text.substring(0, j));
+                text = text.substring(j + 1);
                 j = 0;
             }
 
@@ -43,19 +43,23 @@ public class TextUtilities {
                 j = findClosestWhitespace(j, text);
                 if (j == -1) j = limit;
                 if (j > limit + 10) j = limit + 10;
-                output.add(wrapColor + text.substring(0,j));
-                text = wrapColor + text.substring(j + 1);
+                output.add(wrapColor + text.substring(0, j));
+                if (j != text.length()) text = text.substring(j + 1);
+                else {
+                    text = null;
+                    break;
+                }
                 j = 0;
             }
 
-            if (j != 0 && text.substring(j-1,j+1).equals("\\n")) {
-                output.add(wrapColor + text.substring(0,j-1));
-                text = wrapColor + text.substring(j+1);
+            if (j != 0 && text.substring(j - 1, j + 1).equals("\\n")) {
+                output.add(wrapColor + text.substring(0, j - 1));
+                text = text.substring(j + 1);
                 j = 0;
             }
         }
 
-        output.add(text);
+        if (text != null) output.add(wrapColor + text);
 
         return output;
     }
@@ -124,7 +128,8 @@ public class TextUtilities {
                 startSpace = i;
             }
         }
-        if (startSpace == -1 || endSpace == -1) return -1;
+        if (endSpace == -1) endSpace = text.length();
+        if (startSpace == -1) return endSpace;
         if (endSpace - index > index - startSpace) return startSpace;
         return endSpace;
     }

@@ -12,9 +12,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -91,6 +89,34 @@ public class FileManager {
                 FileManager.saveEpochs(backupEpochFile);
             }
         }.runTaskTimerAsynchronously(PLUGIN, 20 * 60 * 10, 20 * 60 * 10);
+    }
+
+    public static void finalSaveEpochs(File file) {
+        boolean initResult;
+        Map<String, DfyAbility> abilities = new HashMap<>();
+        initResult = new StructureLoader<>(DfyAbility.class).load(abilityFolder, abilities);
+        if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");
+        ArrayList<String> abilReloads = new ArrayList<>();
+        for (String key : ABILITIES.keySet()) {
+            if (!abilities.containsKey(key)) continue;
+            if (!ABILITIES.get(key).equals(abilities.get(key))) {
+                abilReloads.add(key);
+            }
+        }
+        rebuildItems("ability", abilReloads.toArray(new String[0]), false);
+
+        Map<String, DfyItem> items = new HashMap<>();
+        initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, items);
+        if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");         System.out.println("ITEMS RELOAD!");
+        for (String key : ITEMS.keySet()) {
+            if (!abilities.containsKey(key)) continue;
+            if (!ITEMS.get(key).equals(ITEMS.get(key))) {
+                increaseEpoch(key);
+            }
+        }
+
+        saveEpochs(file);
+
     }
 
     public static void saveEpochs(File file) {
@@ -208,11 +234,11 @@ public class FileManager {
                 ABILITY_HANDLER.compile(ability);
             }
         }
-            rebuildItems("ability", keys);
+            rebuildItems("ability", keys, true);
         }
     }
 
-    private static void rebuildItems(String target, String[] keys) {
+    private static void rebuildItems(String target, String[] keys, boolean loadData) {
         for (Object o : ITEMS.values().toArray()) {
             DfyItem i = (DfyItem) o;
             boolean found = false;
@@ -224,7 +250,7 @@ public class FileManager {
             }
             if (found) {
                 increaseEpoch(i.getID());
-                ITEMS.replace(i.getID(), new DfyItem(i.getSourceFile(), i.getIndex()));
+                if (loadData) ITEMS.replace(i.getID(), new DfyItem(i.getSourceFile(), i.getIndex()));
             }
 
         }

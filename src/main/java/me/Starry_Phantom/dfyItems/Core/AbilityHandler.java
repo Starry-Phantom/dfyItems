@@ -14,6 +14,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -127,6 +128,14 @@ public class AbilityHandler implements Listener {
         if (e.getPlayer() instanceof Player player) {
             ArrayList<DfyAbility> abilities = getActiveAbilities(player, TriggerCase.BREAK_BLOCK);
             runAbilities(abilities, e, BlockBreakEvent.class);
+        }
+    }
+
+    @EventHandler
+    public void onShift(PlayerToggleSneakEvent e) {
+        if (e.getPlayer() instanceof Player player) {
+            ArrayList<DfyAbility> abilities = getActiveAbilities(player, TriggerCase.CROUCH);
+            runAbilities(abilities, e, PlayerToggleSneakEvent.class);
         }
     }
 

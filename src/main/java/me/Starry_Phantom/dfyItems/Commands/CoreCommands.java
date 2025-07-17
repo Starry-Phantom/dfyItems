@@ -43,7 +43,7 @@ public class CoreCommands implements CommandExecutor {
         }
 
         if (!commandSender.hasPermission("dfyitems.manage")) {
-            commandSender.sendMessage(Component.text(PLUGIN.getPermissionPrefix() + "You do not have permission use this command!"));
+            commandSender.sendMessage(Component.text(PLUGIN.getPermissionMessage()));
             return true;
         }
 

@@ -471,7 +471,7 @@ public class DfyItem extends DfyStructure {
         return transmuteItem(item, FileManager.getItem(id));
     }
 
-    private static ItemStack transmuteItem(ItemStack item, DfyItem target) {
+    public static ItemStack transmuteItem(ItemStack item, DfyItem target) {
         if (target == null) {
             PLUGIN.warn("Failed to transmute item! Target is invalid!");
             return item;

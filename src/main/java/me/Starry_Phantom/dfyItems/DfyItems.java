@@ -2,6 +2,7 @@ package me.Starry_Phantom.dfyItems;
 
 import me.Starry_Phantom.dfyItems.Commands.CoreCommands;
 import me.Starry_Phantom.dfyItems.Commands.GetCommand;
+import me.Starry_Phantom.dfyItems.Commands.TransmuteCommand;
 import me.Starry_Phantom.dfyItems.Core.AbilityHandler;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.StructureLoader;
@@ -55,6 +56,7 @@ public final class DfyItems extends JavaPlugin {
     private void registerCommands() {
         this.getCommand("get").setExecutor(new GetCommand(this));
         this.getCommand("dfyitems").setExecutor(new CoreCommands(this));
+        this.getCommand("transmute").setExecutor(new TransmuteCommand(this));
 
     }
 
@@ -87,6 +89,7 @@ public final class DfyItems extends JavaPlugin {
     public String getPermissionPrefix() {
         return PERMISSION_PREFIX;
     }
+    public String getPermissionMessage() {return PERMISSION_PREFIX + " You do not have permission to run this command.";}
 
     public String getErrorPrefix() {
         return ERROR_PREFIX;

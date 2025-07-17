@@ -3,7 +3,9 @@ package me.Starry_Phantom.dfyItems.itemStructure;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -33,6 +35,7 @@ public class DfyEnchantment extends DfyStructure {
 
         String enchants = container.get(new NamespacedKey(PLUGIN, type), PersistentDataType.STRING);
         if (enchants == null) return null;
+        if (enchants.isEmpty()) return new ArrayList<>();
 
         String[] enchantBlocks = enchants.split(TextUtilities.makeRegexSafe(DELIMITER));
         ArrayList<DfyEnchantment> enchantments = new ArrayList<>();
@@ -54,15 +57,20 @@ public class DfyEnchantment extends DfyStructure {
 
     public static void applyEnchantments(ItemStack item, ArrayList<DfyEnchantment> enchants) {
         if (!DfyItem.isValidItem(item)) return;
+        if (enchants == null) return;
+        if (enchants.isEmpty()) return;
         ArrayList<DfyEnchantment> allEnchants = getAppliedEnchants(item, enchants);
         allEnchants.addAll(DfyEnchantment.getDefaultEnchants(item));
         DfyEnchantment.sortAlphabetical(allEnchants);
 
+        ItemMeta meta = item.getItemMeta();
         DfyItem baseItem = DfyItem.getBaseItem(item);
-        ArrayList<TextComponent> lore = new ArrayList<>();
+        if (!meta.hasEnchant(Enchantment.MENDING)) meta.addEnchant(Enchantment.MENDING, 1, true);
 
+        ArrayList<TextComponent> lore = baseItem.buildLore(allEnchants);
+        meta.lore(lore);
 
-
+        item.setItemMeta(meta);
     }
 
     public static ArrayList<DfyEnchantment> getAppliedEnchants(ItemStack item, ArrayList<DfyEnchantment> enchantments) {

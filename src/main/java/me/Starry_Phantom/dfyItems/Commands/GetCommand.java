@@ -22,13 +22,13 @@ public class GetCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         if (!commandSender.hasPermission("dfyitems.get.access")) {
-            commandSender.sendMessage(Component.text(PLUGIN.getPermissionPrefix() + "You do not have permission to use this command!"));
+            commandSender.sendMessage(Component.text(PLUGIN.getPermissionMessage()));
             return true;
         }
 
         if (args.length > 3) return false;
         if (args.length > 2 && !commandSender.hasPermission("dfyitems.get.others")) {
-            commandSender.sendMessage(Component.text(PLUGIN.getPermissionPrefix() + "You do not have permission give others items directly!"));
+            commandSender.sendMessage(Component.text(PLUGIN.getPermissionMessage()));
             return true;
         }
         if (args.length == 0) if (commandSender instanceof Player player) return itemSelectGUI(player);
@@ -49,7 +49,7 @@ public class GetCommand implements CommandExecutor {
 
             if (!commandSender.hasPermission("dfyitems.get.others")) {
                 if (amount == -1) {
-                    commandSender.sendMessage(Component.text(PLUGIN.getPermissionPrefix() + "You do not have permission give others items directly!"));
+                    commandSender.sendMessage(Component.text(PLUGIN.getPermissionMessage() + "You do not have permission give others items directly!"));
                     return true;
                 }
                 if (commandSender instanceof Player p) {

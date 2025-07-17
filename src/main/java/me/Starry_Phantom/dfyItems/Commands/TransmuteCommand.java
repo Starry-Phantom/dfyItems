@@ -36,6 +36,7 @@ public class TransmuteCommand implements CommandExecutor {
             sender.sendMessage(PLUGIN.getErrorPrefix() + "You can only transmute dfyItems!");
             return true;
         }
+        String id = DfyItem.getItemID(item);
 
         DfyItem target = FileManager.getItem(args[0].toUpperCase());
         if (target == null) {
@@ -45,6 +46,7 @@ public class TransmuteCommand implements CommandExecutor {
 
         ItemStack transItem = DfyItem.transmuteItem(item, target);
         player.getInventory().setItemInMainHand(transItem);
+        player.sendMessage(PLUGIN.getPrefix() + "Transmuted §6'" + id + "'§e to §6'" + target.getID() + "'");
         return true;
     }
 }

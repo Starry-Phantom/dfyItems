@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public abstract class DfyStructure {
@@ -100,6 +99,27 @@ public abstract class DfyStructure {
         for (int i = s1; i <= e2; i++) {
             arr[i] = temp[i - s1];
         }
+    }
+
+    public static <T extends DfyStructure> boolean contains(T structure, ArrayList<T> structures) {
+        for (T struct : structures) {
+            if (structure.getID().equalsIgnoreCase(struct.getID())) return true;
+        }
+        return false;
+    }
+
+    public static <T extends DfyStructure> T removeFromList(T structure, ArrayList<T> structures) {
+        for (int i = 0; i < structures.size(); i++) {
+            if (structures.get(i).getID().equalsIgnoreCase(structure.getID())) return structures.remove(i);
+        }
+        return null;
+    }
+
+    public static <T extends DfyStructure> T findFromList(T target, ArrayList<T> query) {
+        for (T struct : query) {
+            if (target.getID().equalsIgnoreCase(struct.getID())) return struct;
+        }
+        return null;
     }
 
     protected abstract boolean loadData();

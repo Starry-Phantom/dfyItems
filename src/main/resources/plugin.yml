@@ -30,3 +30,6 @@ commands:
   transmute:
     description: 'Transmutes 1 item into another :3'
     usage: /transmute <item id>
+  enchant:
+    description: 'Enchants items'
+    usage: /enchant [add|remove] <name> [level]

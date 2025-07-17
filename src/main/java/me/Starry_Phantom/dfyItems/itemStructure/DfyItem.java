@@ -49,6 +49,34 @@ public class DfyItem extends DfyStructure {
         return FileManager.getItem(getItemID(item));
     }
 
+    public static void setEnchants(ItemStack item, ArrayList<DfyEnchantment> enchants, String type) {
+        if (enchants == null) return;
+        if (enchants.isEmpty()) return;
+        ItemMeta meta = item.getItemMeta();
+
+        NamespacedKey enchantKey = new NamespacedKey(PLUGIN, "enchantments");
+
+        PersistentDataContainer root = meta.getPersistentDataContainer();
+        PersistentDataContainer enchantContainer = root.get(enchantKey, PersistentDataType.TAG_CONTAINER);
+        if (enchantContainer == null) {
+            enchantContainer =  root.getAdapterContext().newPersistentDataContainer();
+        }
+
+        enchantContainer.set(new NamespacedKey(PLUGIN, type), PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchants));
+
+        root.set(enchantKey, PersistentDataType.TAG_CONTAINER, enchantContainer);
+        item.setItemMeta(meta);
+    }
+
+    public static void setAppliedEnchants(ItemStack item, ArrayList<DfyEnchantment> enchants) {
+        setEnchants(item, enchants, "applied");
+    }
+
+    public static void setDefaultEnchants(ItemStack item, ArrayList<DfyEnchantment> enchants) {
+        setEnchants(item, enchants, "default");
+    }
+
+
     private ItemStack build() {
         ItemStack item = new ItemStack(material);
         buildNBT(item);
@@ -117,7 +145,7 @@ public class DfyItem extends DfyStructure {
         }
 
         if (enchantments != null) {
-            lore.addAll(getBaseEnchantmentLore());
+            lore.addAll(getEnchantmentLore(enchantments));
             lore.add(Component.text(""));
         }
 
@@ -133,6 +161,8 @@ public class DfyItem extends DfyStructure {
         if (stats != null) {
             lore.addAll(getStatLore());
         }
+
+        if (!lore.isEmpty() && lore.getLast().equals(Component.text(""))) lore.removeLast();
 
         return lore;
     }
@@ -289,23 +319,14 @@ public class DfyItem extends DfyStructure {
         PersistentDataContainer enchantStorage = root.getAdapterContext().newPersistentDataContainer();
 
         NamespacedKey enchantmentKey = new NamespacedKey(PLUGIN, "default");
-        StringBuilder enchantBlock = new StringBuilder();
-        for (int i = 0; i < enchantments.size(); i++) {
-            DfyEnchantment e = enchantments.get(i);
-            enchantBlock.append(e.getID());
-            enchantBlock.append(SUB_DELIMITER);
-            enchantBlock.append(e.getLevel());
-            if (i < enchantments.size() - 1) enchantBlock.append(DELIMITER);
-        }
-
-        enchantStorage.set(enchantmentKey, PersistentDataType.STRING, enchantBlock.toString());
+        enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
         enchantStorage.set(new NamespacedKey(PLUGIN, "applied"), PersistentDataType.STRING, "");
 
         root.set(topKey, PersistentDataType.TAG_CONTAINER, enchantStorage);
 
     }
 
-    private ArrayList<TextComponent> getBaseEnchantmentLore() {
+    public ArrayList<TextComponent> getEnchantmentLore(ArrayList<DfyEnchantment> enchantments) {
         if (enchantments == null) return null;
         String enchantString = DfyEnchantment.buildEnchantString(enchantments);
         return TextUtilities.insertIntoComponents(TextUtilities.wrapText(enchantString, ENCHANT_COLOR));

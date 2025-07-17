@@ -1,6 +1,7 @@
 package me.Starry_Phantom.dfyItems;
 
 import me.Starry_Phantom.dfyItems.Commands.CoreCommands;
+import me.Starry_Phantom.dfyItems.Commands.EnchantCommand;
 import me.Starry_Phantom.dfyItems.Commands.GetCommand;
 import me.Starry_Phantom.dfyItems.Commands.TransmuteCommand;
 import me.Starry_Phantom.dfyItems.Core.AbilityHandler;
@@ -57,6 +58,7 @@ public final class DfyItems extends JavaPlugin {
         this.getCommand("get").setExecutor(new GetCommand(this));
         this.getCommand("dfyitems").setExecutor(new CoreCommands(this));
         this.getCommand("transmute").setExecutor(new TransmuteCommand(this));
+        this.getCommand("enchant").setExecutor(new EnchantCommand(this));
 
     }
 

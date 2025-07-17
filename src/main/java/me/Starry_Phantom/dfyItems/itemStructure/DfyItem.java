@@ -76,6 +76,16 @@ public class DfyItem extends DfyStructure {
         setEnchants(item, enchants, "default");
     }
 
+    public static int getEpochOf(ItemStack item) {
+        if (!isValidItem(item)) return -1;
+        return item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER).get(new NamespacedKey(PLUGIN, getItemID(item)), PersistentDataType.INTEGER);
+    }
+
+    public static int getGlobalEpochOf(ItemStack item) {
+        if (!isValidItem(item)) return -1;
+        return item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER).get(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER);
+    }
+
 
     private ItemStack build() {
         ItemStack item = new ItemStack(material);
@@ -121,10 +131,21 @@ public class DfyItem extends DfyStructure {
             addStatNBT(meta);
         }
 
+        addEpochNBT(meta);
+
         item.setItemMeta(meta);
 
         setEquippable(item);
         setConsumable(item);
+    }
+
+    private void addEpochNBT(ItemMeta meta) {
+        PersistentDataContainer root = meta.getPersistentDataContainer();
+        PersistentDataContainer epochs = root.getAdapterContext().newPersistentDataContainer();
+
+        epochs.set(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER, FileManager.getGlobalEpoch());
+        epochs.set(new NamespacedKey(PLUGIN, STRUCTURE_ID), PersistentDataType.INTEGER, FileManager.getItemEpoch(STRUCTURE_ID));
+        root.set(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER, epochs);
     }
 
     public ArrayList<TextComponent> buildLore() {return buildLore(enchantments);}
@@ -506,6 +527,23 @@ public class DfyItem extends DfyStructure {
         DfyEnchantment.applyEnchantments(transItem, enchants);
 
         return transItem;
+    }
+
+
+    public static ItemStack updateItem(ItemStack item) {
+        if (!isValidItem(item)) {
+            PLUGIN.warn("Failed to update item! Target is invalid!");
+            return item;
+        }
+
+        DfyItem base = getBaseItem(item);
+
+        ItemStack updateItem = base.build();
+
+        ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
+        DfyEnchantment.applyEnchantments(updateItem, enchants);
+
+        return updateItem;
     }
 
     public ArrayList<String> getAbilities() {

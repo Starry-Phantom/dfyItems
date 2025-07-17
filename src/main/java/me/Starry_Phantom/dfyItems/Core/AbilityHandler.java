@@ -170,6 +170,12 @@ public class AbilityHandler implements Listener {
         for (TriggerSlot slot : slots) {
             ItemStack item = items.get(slot);
             if (!DfyItem.isValidItem(item)) continue;
+            if (ItemUpdateHandler.itemNeedsUpdate(item)) {
+                ItemStack newItem = DfyItem.updateItem(item);
+                TriggerSlot.setSlotItem(player, slot, newItem, item);
+                item = newItem;
+
+            }
 
             String[] abilities = DfyAbility.getItemAbilities(item);
             if (abilities == null) continue;

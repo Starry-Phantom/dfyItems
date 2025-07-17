@@ -3,10 +3,12 @@ package me.Starry_Phantom.dfyItems.Core;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public enum TriggerSlot {
     HAND, OFF_HAND, FEET, LEGS, CHEST, HEAD, SEVEN, EIGHT, NINE;
@@ -34,5 +36,25 @@ public enum TriggerSlot {
 
     public static boolean isIrregular(TriggerSlot slot) {
         return Arrays.asList(irregularSlots).contains(slot);
+    }
+
+    public static void setSlotItem(Player player, TriggerSlot slot, ItemStack newItem) {
+        if (isIrregular(slot)) {
+            int index = Arrays.asList(irregularSlots).indexOf(slot) + 6;
+            player.getInventory().setItem(index - 1, newItem);
+        } else {
+            player.getInventory().setItem(EquipmentSlot.valueOf(slot.name()), newItem);
+        }
+    }
+
+    public static void setSlotItem(Player player, TriggerSlot slot, ItemStack newItem, ItemStack validationItem) {
+        PlayerInventory inv = player.getInventory();
+        if (isIrregular(slot)) {
+            int index = Arrays.asList(irregularSlots).indexOf(slot) + 6;
+            if (Objects.equals(inv.getItem(index - 1), validationItem)) inv.setItem(index - 1, newItem);
+        } else {
+            EquipmentSlot eq = EquipmentSlot.valueOf(slot.name());
+            if (Objects.equals(inv.getItem(eq), validationItem)) inv.setItem(eq, newItem);
+        }
     }
 }

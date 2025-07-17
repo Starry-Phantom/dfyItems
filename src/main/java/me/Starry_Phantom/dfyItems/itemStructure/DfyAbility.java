@@ -44,6 +44,10 @@ public class DfyAbility extends DfyStructure {
     }
 
     public boolean equals(DfyAbility ability) {
+        if (!Objects.equals(STRUCTURE_ID, ability.getID())) {
+            return false;
+        }
+
         if (!Objects.equals(displayName, ability.getDisplayName())) {
             return false;
         }
@@ -56,6 +60,10 @@ public class DfyAbility extends DfyStructure {
     }
 
     public boolean deepEquals(DfyAbility ability) {
+        if (!Objects.equals(STRUCTURE_ID, ability.getID())) {
+            return false;
+        }
+
         if (!path.equals(ability.getPath())) {
             return false;
         }

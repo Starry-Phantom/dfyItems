@@ -32,7 +32,7 @@ public class DfyItem extends DfyStructure {
     private String rarity, type, model;
     private Material material;
     private String longLore, shortLore;
-    boolean glint, glintNull, wearableNull;
+    boolean glint, glintNull;
     private ArrayList<DfyEnchantment> enchantments;
     private ArrayList<String> abilities;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
@@ -528,5 +528,70 @@ public class DfyItem extends DfyStructure {
 
     public String getType() {
         return type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getRawLongLore() {
+        return longLore;
+    }
+
+    public String getRawShortLore() {
+        return shortLore;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public Material getMaterial() {
+        return material;
+    }
+
+    public boolean isGlint() {
+        return glint;
+    }
+
+    public boolean isGlintNull() {
+        return glintNull;
+    }
+
+    public ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> getStats() {
+        return stats;
+    }
+
+    public Map<String, Object> getConsumable() {
+        return consumable;
+    }
+
+    public Map<String, Object> getEquippable() {
+        return equippable;
+    }
+
+    public boolean deepEquals(DfyItem item) {
+        if (!Objects.equals(STRUCTURE_ID, item.getID())) return false;
+
+        if (!Objects.equals(name, item.getName())) return false;
+        if (!Objects.equals(type, item.getType())) return false;
+        if (material != item.getMaterial()) return false;
+        if (!Objects.equals(rarity, item.getRarity())) return false;
+        if (!Objects.equals(longLore, item.getRawLongLore())) return false;
+        if (!Objects.equals(shortLore, item.getRawShortLore())) return false;
+        if (!Objects.equals(model, item.getModel())) return false;
+
+        if (!Objects.equals(abilities, item.getAbilities())) return false;
+        if (!Objects.equals(stats, item.getStats())) return false;
+
+        if (!Objects.equals(enchantments, item.getEnchantments())) return false;
+        if (glintNull != item.isGlintNull()) return false;
+        if (glint != item.isGlint()) return false;
+
+        if (!Objects.equals(equippable, item.getEquippable())) return false;
+        if (!Objects.equals(consumable, item.getConsumable())) return false;
+
+
+        return true;
     }
 }

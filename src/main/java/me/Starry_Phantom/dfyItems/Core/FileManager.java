@@ -109,8 +109,8 @@ public class FileManager {
         initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, items);
         if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");         System.out.println("ITEMS RELOAD!");
         for (String key : ITEMS.keySet()) {
-            if (!abilities.containsKey(key)) continue;
-            if (!ITEMS.get(key).equals(ITEMS.get(key))) {
+            if (!items.containsKey(key)) continue;
+            if (!ITEMS.get(key).deepEquals(items.get(key))) {
                 increaseEpoch(key);
             }
         }
@@ -221,9 +221,14 @@ public class FileManager {
             else ITEMS.put(key, (DfyItem) storage.get(key));
         }
         if (clazz == DfyAbility.class) { for (String key : keys) {
+            ArrayList<String> replaceKeys = new ArrayList<>();
             DfyAbility ability = (DfyAbility) storage.get(key);
+
             if (ABILITIES.containsKey(key)) {
                 DfyAbility oldAbility = ABILITIES.get(key);
+
+                if (!oldAbility.equals(ability)) replaceKeys.add(key);
+
                 ABILITY_HANDLER.replace(oldAbility, ability);
                 ABILITIES.replace(key, ability);
                 if (!oldAbility.getPath().equals(ability.getPath())) {
@@ -231,11 +236,12 @@ public class FileManager {
                 }
             } else {
                 ABILITIES.put(key, ability);
+                replaceKeys.add(key);
                 ABILITY_HANDLER.compile(ability);
             }
-        }
-            rebuildItems("ability", keys, true);
-        }
+
+            rebuildItems("ability", replaceKeys.toArray(new String[0]), true);
+        }}
     }
 
     private static void rebuildItems(String target, String[] keys, boolean loadData) {

@@ -109,7 +109,9 @@ public class CoreCommands implements CommandExecutor {
             sender.sendMessage(PLUGIN.getErrorPrefix() + "§cCould not find file '" + path + "'!");
             return true;
         }
-        if (!new StructureLoader<>(clazz).loadAllStructuresFrom(sourceFile, storage)) {
+        if (!loadFromDirectory(sourceFile, storage, clazz)) {
+            sender.sendMessage(PLUGIN.getErrorPrefix() + "§cAt least one error occurred while reloading files in '" + path + "'!");
+        } else if (!new StructureLoader<>(clazz).loadAllStructuresFrom(sourceFile, storage)) {
             sender.sendMessage(PLUGIN.getErrorPrefix() + "§cAn error occurred while reloading '" + path + "'!");
             return true;
         }
@@ -121,6 +123,24 @@ public class CoreCommands implements CommandExecutor {
         if (sender instanceof Player) sender.sendMessage(Component.text(PLUGIN.getPrefix() + "Reloading §6'" + path + "'§e in " + timeToReload + "ms!" ));
         PLUGIN.log("Reloaded '" + path + "' in " + timeToReload + "ms!");
         return true;
+    }
+
+    private <T extends DfyStructure> boolean loadFromDirectory(File sourceFile, Map<String, T> storage, Class<T> clazz) {
+        if (!sourceFile.isDirectory()) return true;
+        File[] files = sourceFile.listFiles();
+        if (files == null) return true;
+
+        boolean anyFailed = false;
+        for (File file : files) {
+            if (file.isDirectory()) {
+                if (anyFailed) loadFromDirectory(file, storage, clazz);
+                else anyFailed = !loadFromDirectory(file, storage, clazz);
+                continue;
+            }
+            if (anyFailed) new StructureLoader<>(clazz).loadAllStructuresFrom(file, storage);
+            else anyFailed = !new StructureLoader<>(clazz).loadAllStructuresFrom(file, storage);
+        }
+        return !anyFailed;
     }
 
     private boolean sendHelp(CommandSender commandSender) {

@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class DfyStructure {
@@ -29,6 +30,7 @@ public abstract class DfyStructure {
     public DfyStructure(File loadFile, int index) {
         this.SOURCE_FILE = loadFile;
         this.INDEX = index;
+        if (loadFile == null) return;
         if (!importData()) {
             PLUGIN.severe("Could not import data successfully for " + SOURCE_FILE.getName());
             THROWN_LOAD_ERROR = true;
@@ -40,6 +42,64 @@ public abstract class DfyStructure {
             return;
         }
         THROWN_LOAD_ERROR = false;
+    }
+
+    public static <T extends DfyStructure> void sortAlphabetical(ArrayList<T> structures) {
+        DfyStructure[] structArray = structures.toArray(new DfyStructure[0]);
+        mergerHelper(structArray, 0, structArray.length / 2 - 1, structArray.length / 2, structArray.length - 1);
+        structures.clear();
+        for (DfyStructure structure : structArray) structures.add((T) structure);
+    }
+
+    private static void swap(DfyStructure[] arr, int index1, int index2) {
+        DfyStructure swap = arr[index1];
+        arr[index1] = arr[index2];
+        arr[index2] = swap;
+    }
+
+    private static void mergerHelper(DfyStructure[] arr, int s1, int e1, int s2, int e2) {
+        if (e2 - s1 == 1) {
+            int compareResult = arr[s1].getID().compareTo(arr[s2].getID());
+            if (compareResult > 0) swap(arr, s1, s2);
+            return;
+        }
+
+        if (e2 - s1 <= 0) return;
+
+        mergerHelper(arr, s1, (s1 + e1) / 2, (s1 + e1) / 2 + 1, e1);
+        mergerHelper(arr, s2, (s2 + e2) / 2, (s2 + e2) / 2 + 1, e2);
+
+        int l1p = s1;
+        int l2p = s2;
+        int tempIndex = 0;
+        DfyStructure[] temp = new DfyStructure[e2-s1+1];
+        while (l1p <= e1 && l2p <= e2) {
+            int compareResult = arr[l1p].getID().compareTo(arr[l2p].getID());
+            if (compareResult >= 0) {
+                temp[tempIndex] = arr[l2p];
+                l2p++;
+            } else {
+                temp[tempIndex] = arr[l1p];
+                l1p++;
+            }
+            tempIndex++;
+        }
+
+        while (l1p <= e1) {
+            temp[tempIndex] = arr[l1p];
+            l1p++;
+            tempIndex++;
+        }
+
+        while (l2p <= e2) {
+            temp[tempIndex] = arr[l2p];
+            l2p++;
+            tempIndex++;
+        }
+
+        for (int i = s1; i <= e2; i++) {
+            arr[i] = temp[i - s1];
+        }
     }
 
     protected abstract boolean loadData();
@@ -127,7 +187,7 @@ public abstract class DfyStructure {
                 }
                 storage.add((T) thing);
             }
-            if (skipped > 0) PLUGIN.warn("Skipped " + skipped + " abilities when loading item " + STRUCTURE_ID);
+            if (skipped > 0) PLUGIN.warn("Skipped " + skipped + " of " + clazz.getSimpleName() + " when loading item " + STRUCTURE_ID);
         } else {
             return false;
         }
@@ -190,5 +250,14 @@ public abstract class DfyStructure {
 
     public int getIndex() {
         return INDEX;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + ":" + STRUCTURE_ID;
+    }
+
+    protected boolean equalsID(DfyStructure dfyStructure) {
+        return STRUCTURE_ID.equals(dfyStructure.getID());
     }
 }

@@ -3,6 +3,7 @@ package me.Starry_Phantom.dfyItems.itemStructure;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.Equippable;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
@@ -14,7 +15,6 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -129,7 +129,6 @@ public class DfyItem extends DfyStructure {
         ItemMeta meta = item.getItemMeta();
         meta.setUnbreakable(true);
 
-        hideFlags(meta);
         addIDtoNBT(meta);
 
         setName(meta);
@@ -152,8 +151,6 @@ public class DfyItem extends DfyStructure {
 
         // TODO: Mystic Enchants go here! (Adding also in a future update...)
 
-        // TODO: Kill effects go here! (Adding in future update...)
-
         if (stats != null) {
             addStatNBT(meta);
         }
@@ -164,6 +161,8 @@ public class DfyItem extends DfyStructure {
 
         setEquippable(item);
         setConsumable(item);
+        EffectApplicator.addEffectToItem(item, effects.toArray(new String[0]));
+        hideFlags(item);
     }
 
     private void addEpochNBT(ItemMeta meta) {
@@ -385,14 +384,35 @@ public class DfyItem extends DfyStructure {
         meta.customName(TextUtilities.applyHexColoring("§r§f" + name));
     }
 
-    private void hideFlags(ItemMeta meta) {
-        meta.addItemFlags(
-                ItemFlag.HIDE_ARMOR_TRIM,
-                ItemFlag.HIDE_ATTRIBUTES,
-                ItemFlag.HIDE_ENCHANTS,
-                ItemFlag.HIDE_UNBREAKABLE,
-                ItemFlag.HIDE_STORED_ENCHANTS
+    private void hideFlags(ItemStack item) {
+        TooltipDisplay.Builder c = TooltipDisplay.tooltipDisplay();
+
+        c.addHiddenComponents(
+                DataComponentTypes.BANNER_PATTERNS,
+                DataComponentTypes.BLOCK_DATA,
+                DataComponentTypes.ATTRIBUTE_MODIFIERS,
+                DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER,
+                DataComponentTypes.POTION_CONTENTS,
+                DataComponentTypes.POTION_DURATION_SCALE,
+                DataComponentTypes.CHARGED_PROJECTILES,
+                DataComponentTypes.ENCHANTMENTS,
+                DataComponentTypes.BASE_COLOR,
+                DataComponentTypes.JUKEBOX_PLAYABLE,
+                DataComponentTypes.DYED_COLOR,
+                DataComponentTypes.FIREWORK_EXPLOSION,
+                DataComponentTypes.FIREWORKS,
+                DataComponentTypes.MAP_ID,
+                DataComponentTypes.PROVIDES_TRIM_MATERIAL,
+                DataComponentTypes.UNBREAKABLE,
+                DataComponentTypes.WRITABLE_BOOK_CONTENT,
+                DataComponentTypes.WRITTEN_BOOK_CONTENT,
+                DataComponentTypes.BUNDLE_CONTENTS,
+                DataComponentTypes.STORED_ENCHANTMENTS,
+                DataComponentTypes.TRIM,
+                DataComponentTypes.TOOL
         );
+
+        item.setData(DataComponentTypes.TOOLTIP_DISPLAY, c.build());
     }
 
     public ArrayList<TextComponent> getAbilityLore() {

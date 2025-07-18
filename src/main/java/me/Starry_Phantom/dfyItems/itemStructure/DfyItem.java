@@ -38,6 +38,7 @@ public class DfyItem extends DfyStructure {
     private ArrayList<DfyEnchantment> enchantments;
     private ArrayList<String> abilities, effects;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
+    int maxStackSize;
 
     private Map<String, Object> consumable, equippable;
 
@@ -135,6 +136,7 @@ public class DfyItem extends DfyStructure {
         setName(meta);
         setModel(meta);
         setGlint(meta);
+        setMaxStackSize(meta);
 
         if (rarity != null && type != null) {
             addRarityNBT(meta);
@@ -150,7 +152,7 @@ public class DfyItem extends DfyStructure {
             addAbilityNBT(meta);
         }
 
-        // TODO: Mystic Enchants go here! (Adding also in a future update...)
+        // TODO: Mystic Enchants go here! (Adding in a future update...)
 
         if (stats != null) {
             addStatNBT(meta);
@@ -164,6 +166,10 @@ public class DfyItem extends DfyStructure {
         setConsumable(item);
         EffectApplicator.addEffectToItem(item, effects.toArray(new String[0]));
         hideFlags(item);
+    }
+
+    private void setMaxStackSize(ItemMeta meta) {
+        if (maxStackSize != -1) meta.setMaxStackSize(maxStackSize);
     }
 
     private void addEpochNBT(ItemMeta meta) {
@@ -467,6 +473,9 @@ public class DfyItem extends DfyStructure {
 
         initField("name", material.toString());
         glintNull = !initField("glint", false);
+
+        if (data.containsKey("max_stack_size")) maxStackSize = (int) data.get("max_stack_size");
+        else maxStackSize = -1;
 
         loadEnchants();
         if (enchantments != null) DfyStructure.sortAlphabetical(enchantments);

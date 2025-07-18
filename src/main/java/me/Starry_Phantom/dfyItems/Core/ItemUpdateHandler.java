@@ -48,7 +48,6 @@ public class ItemUpdateHandler implements Listener {
     public static boolean itemNeedsUpdate(ItemStack item) {
         if (!DfyItem.isValidItem(item)) return false;
 
-
         String id = DfyItem.getItemID(item);
         if (DfyItem.getEpochOf(item) != FileManager.getItemEpoch(id)) return true;
         return DfyItem.getGlobalEpochOf(item) != FileManager.getGlobalEpoch();

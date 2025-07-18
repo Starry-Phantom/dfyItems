@@ -1,21 +1,44 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class DfyItemLoreBuilder {
     private DfyItem item;
     private ArrayList<DfyEnchantment> enchantments;
+    private ArrayList<DfyAbility> effects;
+
+    public DfyItemLoreBuilder(ItemStack item) {
+        this.item = DfyItem.getBaseItem(item);
+        this.enchantments = DfyEnchantment.getDefaultEnchants(item);
+        addEnchants(DfyEnchantment.getAppliedEnchants(item));
+        effects(EffectApplicator.getEffects(item));
+    }
 
     public DfyItemLoreBuilder(DfyItem item) {
         this.item = item;
         this.enchantments = item.getEnchantments();
+        this.effects = FileManager.getAbilities(item.getEffects());
     }
 
     public DfyItemLoreBuilder enchants(ArrayList<DfyEnchantment> enchantments) {
         this.enchantments = enchantments;
+        return this;
+    }
+
+    public DfyItemLoreBuilder addEnchants(ArrayList<DfyEnchantment> enchantments) {
+        if (this.enchantments == null) {
+            this.enchantments = enchantments;
+            return this;
+        }
+        this.enchantments.addAll(enchantments);
+        DfyStructure.sortAlphabetical(enchantments);
         return this;
     }
 
@@ -37,7 +60,8 @@ public class DfyItemLoreBuilder {
         }
 
         if (enchantments != null) {
-            lore.addAll(item.getEnchantmentLore(enchantments));
+            DfyStructure.sortAlphabetical(enchantments);
+            lore.addAll(DfyItem.getEnchantmentLore(enchantments));
             lore.add(Component.text(""));
         }
 
@@ -45,6 +69,10 @@ public class DfyItemLoreBuilder {
         if (abilityLore != null) {
             lore.addAll(abilityLore);
             lore.add(Component.text(""));
+        }
+
+        if (effects != null) {
+            lore.addAll(DfyItem.getEffectLore(effects));
         }
 
         // TODO: Mystic Enchants go here! (Adding also in a future update...)
@@ -62,4 +90,25 @@ public class DfyItemLoreBuilder {
         return lore;
     }
 
+    public DfyItemLoreBuilder effects(ArrayList<DfyAbility> effects) {
+        this.effects = effects;
+        return this;
+    }
+
+    public DfyItemLoreBuilder addEffects(ArrayList<DfyAbility> effects) {
+        if (this.effects == null) {
+            this.effects = effects;
+            return this;
+        }
+        this.effects.addAll(effects);
+        return this;
+    }
+
+    public DfyItemLoreBuilder addEffects(String[] effects) {
+        if (this.effects == null) {
+            this.effects = new ArrayList<>();
+        }
+        this.effects.addAll(FileManager.getAbilities(effects));
+        return this;
+    }
 }

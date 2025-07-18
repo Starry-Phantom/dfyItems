@@ -61,25 +61,18 @@ public class DfyEnchantment extends DfyStructure {
         if (enchants == null) return;
         if (enchants.isEmpty()) return;
 
-        ArrayList<DfyEnchantment> allEnchants = getAppliedEnchants(item);
-        if (allEnchants == null) allEnchants = new ArrayList<>();
-        allEnchants.addAll(enchants);
-        DfyStructure.sortAlphabetical(allEnchants);
-        DfyItem.setAppliedEnchants(item, allEnchants);
-
-        ArrayList<DfyEnchantment> defEnchants = DfyEnchantment.getDefaultEnchants(item);
-        if (defEnchants != null) allEnchants.addAll(defEnchants);
-        DfyEnchantment.sortAlphabetical(allEnchants);
-        removeDuplicates(allEnchants);
+        ArrayList<DfyEnchantment> appliedEnchants = getAppliedEnchants(item);
+        if (appliedEnchants == null) appliedEnchants = new ArrayList<>();
+        appliedEnchants.addAll(enchants);
+        DfyStructure.sortAlphabetical(appliedEnchants);
+        removeDuplicates(appliedEnchants);
+        DfyItem.setAppliedEnchants(item, appliedEnchants);
 
         ItemMeta meta = item.getItemMeta();
-        DfyItem baseItem = DfyItem.getBaseItem(item);
         if (!meta.hasEnchant(Enchantment.MENDING)) meta.addEnchant(Enchantment.MENDING, 1, true);
 
-        ArrayList<TextComponent> lore = baseItem.loreBuilder().enchants(allEnchants).build();
-        meta.lore(lore);
-
         item.setItemMeta(meta);
+        DfyItem.rebuildLore(item);
     }
 
     public static ArrayList<DfyEnchantment> getAppliedEnchants(ItemStack item, ArrayList<DfyEnchantment> enchantments) {
@@ -121,14 +114,11 @@ public class DfyEnchantment extends DfyStructure {
             }
         }
 
-        ItemMeta meta = item.getItemMeta();
-        ArrayList<DfyEnchantment> allEnchants = new ArrayList<>(appliedEnchants);
-        allEnchants.addAll(defEnchants);
-        meta.lore(base.loreBuilder().enchants(allEnchants).build());
-        item.setItemMeta(meta);
-
         DfyItem.setAppliedEnchants(item, appliedEnchants);
         if (removedDefault) DfyItem.setDefaultEnchants(item, defEnchants);
+
+        DfyItem.rebuildLore(item);
+
         return removedDefault;
     }
 

@@ -1,11 +1,14 @@
 package me.Starry_Phantom.dfyItems.InternalAbilities;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerCase;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -86,6 +89,7 @@ public class EffectApplicator {
 
     private static void applyEffectToItem(Player player, ItemStack item, ItemStack effect) {
         ItemStack newItem = addEffectToItem(item.clone(), effect.clone());
+        newItem = DfyItem.rebuildLore(newItem);
 
         if (newItem == null) {
             player.sendMessage("§cYou have already applied this effect to your item!");
@@ -95,8 +99,10 @@ public class EffectApplicator {
         PlayerInventory inv = player.getInventory();
         if (inv.getItemInMainHand().equals(item) && inv.getItemInOffHand().equals(effect)) {
             inv.setItemInMainHand(newItem);
-            if (effect.getAmount() > 1) {
-                effect.setAmount(effect.getAmount() - 1);
+            int amount = effect.getAmount();
+            System.out.println(amount);
+            if (amount > 1) {
+                effect.setAmount(amount - 1);
                 inv.setItemInOffHand(effect);
             } else {
                 inv.setItemInOffHand(new ItemStack(Material.AIR));
@@ -122,7 +128,8 @@ public class EffectApplicator {
     }
 
     public static ItemStack addEffectToItem(ItemStack item, String[] newEffects) {
-        String[] oldEffects = getEffects(item);
+        if (newEffects == null) return item;
+        String[] oldEffects = getEffectsAsStrings(item);
         ArrayList<String> applyEffects = new ArrayList<>();
         if (oldEffects == null) applyEffects.addAll(Arrays.asList(newEffects));
         else {
@@ -148,14 +155,28 @@ public class EffectApplicator {
 
         container.set(effectKey, PersistentDataType.STRING, effectBlock);
         item.setItemMeta(meta);
-        return item;
+        return DfyItem.rebuildLore(item);
     }
 
-    public static String[] getEffects(ItemStack item) {
+    public static String[] getEffectsAsStrings(ItemStack item) {
         NamespacedKey effectKey = new NamespacedKey("dfyitems", "effects");
         String effectBlock = item.getItemMeta().getPersistentDataContainer().get(effectKey, PersistentDataType.STRING);
 
         if (effectBlock == null) return null;
         return effectBlock.split(TextUtilities.makeRegexSafe(DfyStructure.DELIMITER));
+    }
+
+    public static ArrayList<DfyAbility> getEffects(ItemStack item) {
+        String[] effects = getEffectsAsStrings(item);
+        if (effects == null) return null;
+
+        ArrayList<DfyAbility> abilities = new ArrayList<>();
+
+        for (String s : effects) {
+            DfyAbility effect = FileManager.getAbility(s);
+            if (effect != null) abilities.add(effect);
+        }
+
+        return abilities;
     }
 }

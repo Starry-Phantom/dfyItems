@@ -7,6 +7,7 @@ import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
@@ -34,7 +35,7 @@ public class DfyItem extends DfyStructure {
     private String longLore, shortLore;
     boolean glint, glintNull;
     private ArrayList<DfyEnchantment> enchantments;
-    private ArrayList<String> abilities;
+    private ArrayList<String> abilities, effects;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
 
     private Map<String, Object> consumable, equippable;
@@ -86,24 +87,42 @@ public class DfyItem extends DfyStructure {
         return item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER).get(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER);
     }
 
+    public static ItemStack rebuildLore(ItemStack item) {
+        if (!isValidItem(item)) return item;
+
+        DfyItem base = getBaseItem(item);
+        ArrayList<TextComponent> lore = loreBuilder(item).build();
+        ItemMeta meta = item.getItemMeta();
+        meta.lore(lore);
+        item.setItemMeta(meta);
+
+        return item;
+    }
+
 
     private ItemStack build() {
         ItemStack item = new ItemStack(material);
         buildNBT(item);
 
         ItemMeta meta = item.getItemMeta();
-        meta.lore(DfyItem.loreBuilder(this).build());
+        meta.lore(this.loreBuilder().build());
         item.setItemMeta(meta);
 
         return item;
     }
 
-    public static DfyItemLoreBuilder loreBuilder(DfyItem dfyItem) {
-        return new DfyItemLoreBuilder(dfyItem);
+    private ItemStack buildSkeleton() {
+        ItemStack item = new ItemStack(material);
+        buildNBT(item);
+        return item;
     }
 
     public DfyItemLoreBuilder loreBuilder() {
         return new DfyItemLoreBuilder(this);
+    }
+
+    public static DfyItemLoreBuilder loreBuilder(ItemStack item) {
+        return new DfyItemLoreBuilder(item);
     }
 
     private void buildNBT(ItemStack item) {
@@ -315,10 +334,23 @@ public class DfyItem extends DfyStructure {
 
     }
 
-    public ArrayList<TextComponent> getEnchantmentLore(ArrayList<DfyEnchantment> enchantments) {
+    public static ArrayList<TextComponent> getEnchantmentLore(ArrayList<DfyEnchantment> enchantments) {
         if (enchantments == null) return null;
         String enchantString = DfyEnchantment.buildEnchantString(enchantments);
         return TextUtilities.insertIntoComponents(TextUtilities.wrapText(enchantString, ENCHANT_COLOR));
+    }
+
+    public static ArrayList<TextComponent> getEffectLore(ArrayList<DfyAbility> effects) {
+        if (effects == null) return null;
+        ArrayList<TextComponent> lore = new ArrayList<>();
+
+        for (DfyAbility effect : effects) {
+            lore.addAll(TextUtilities.insertIntoComponents(effect.getLoreBlock()));
+            lore.add(Component.text("§8§l✔ §8Effect applied!"));
+            lore.add(Component.text(""));
+        }
+
+        return lore;
     }
 
     private void setGlint(ItemMeta meta) {
@@ -409,6 +441,9 @@ public class DfyItem extends DfyStructure {
         abilities = new ArrayList<>();
         loadArrayList("abilities", abilities, String.class);
 
+        effects = new ArrayList<>();
+        loadArrayList("effects", effects, String.class);
+
         initField("name", material.toString());
         glintNull = !initField("glint", false);
 
@@ -481,41 +516,43 @@ public class DfyItem extends DfyStructure {
         return transmuteItem(item, FileManager.getItem(id));
     }
 
+    public static ItemStack updateItem(ItemStack item) {
+        if (!DfyItem.isValidItem(item)) return item;
+
+        return transmuteItem(item, DfyItem.getBaseItem(item));
+    }
+
+
+
+
     public static ItemStack transmuteItem(ItemStack item, DfyItem target) {
-        if (target == null) {
+        if (!isValidItem(item)) {
             PLUGIN.warn("Failed to transmute item! Target is invalid!");
             return item;
         }
 
         if (!DfyItem.isValidItem(item)) return item;
+        DfyItem base = target;
 
-        ItemStack transItem = target.build();
-
-        ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
-        DfyEnchantment.applyEnchantments(transItem, enchants);
-
-        return transItem;
-    }
-
-
-    public static ItemStack updateItem(ItemStack item) {
-        if (!isValidItem(item)) {
-            PLUGIN.warn("Failed to update item! Target is invalid!");
-            return item;
-        }
-
-        DfyItem base = getBaseItem(item);
-
-        ItemStack updateItem = base.build();
+        ItemStack updateItem = base.buildSkeleton();
 
         ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
         DfyEnchantment.applyEnchantments(updateItem, enchants);
+
+        EffectApplicator.addEffectToItem(updateItem, EffectApplicator.getEffectsAsStrings(item));
+
+        updateItem.setAmount(item.getAmount());
+        DfyItem.rebuildLore(updateItem);
 
         return updateItem;
     }
 
     public ArrayList<String> getAbilities() {
         return abilities;
+    }
+
+    public ArrayList<String> getEffects() {
+        return effects;
     }
 
     public ArrayList<DfyEnchantment> getEnchantments() {
@@ -583,6 +620,7 @@ public class DfyItem extends DfyStructure {
 
         if (!Objects.equals(abilities, item.getAbilities())) return false;
         if (!Objects.equals(stats, item.getStats())) return false;
+        if (!Objects.equals(effects, item.getEffects())) return false;
 
         if (!Objects.equals(enchantments, item.getEnchantments())) return false;
         if (glintNull != item.isGlintNull()) return false;
@@ -590,7 +628,6 @@ public class DfyItem extends DfyStructure {
 
         if (!Objects.equals(equippable, item.getEquippable())) return false;
         if (!Objects.equals(consumable, item.getConsumable())) return false;
-
 
         return true;
     }

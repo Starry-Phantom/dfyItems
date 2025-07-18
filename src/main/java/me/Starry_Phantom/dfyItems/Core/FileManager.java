@@ -281,6 +281,22 @@ public class FileManager {
         return ABILITIES;
     }
 
+    public static ArrayList<DfyAbility> getAbilities(ArrayList<String> ids) {
+        ArrayList<DfyAbility> retVal = new ArrayList<>();
+        for (String id : ids) {
+            retVal.add(getAbility(id));
+        }
+        return retVal;
+    }
+
+    public static ArrayList<DfyAbility> getAbilities(String[] ids) {
+        ArrayList<DfyAbility> retVal = new ArrayList<>();
+        for (String id : ids) {
+            retVal.add(getAbility(id));
+        }
+        return retVal;
+    }
+
     public static File getItemsFolder() {
         return itemsFolder;
     }

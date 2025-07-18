@@ -108,7 +108,7 @@ public class FileManager {
 
         Map<String, DfyItem> items = new HashMap<>();
         initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, items);
-        if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");         System.out.println("ITEMS RELOAD!");
+        if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");
         for (String key : ITEMS.keySet()) {
             if (!items.containsKey(key)) continue;
             if (!ITEMS.get(key).deepEquals(items.get(key))) {

@@ -100,7 +100,6 @@ public class EffectApplicator {
         if (inv.getItemInMainHand().equals(item) && inv.getItemInOffHand().equals(effect)) {
             inv.setItemInMainHand(newItem);
             int amount = effect.getAmount();
-            System.out.println(amount);
             if (amount > 1) {
                 effect.setAmount(amount - 1);
                 inv.setItemInOffHand(effect);

@@ -23,6 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.io.File;
 import java.util.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class DfyItem extends DfyStructure {
     private static final String ENCHANT_COLOR = "§r§d";
     private static final String NEGATIVE_STAT_COLOR = "§r§c";

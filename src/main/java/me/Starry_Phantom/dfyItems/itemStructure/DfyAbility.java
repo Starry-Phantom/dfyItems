@@ -20,9 +20,20 @@ public class DfyAbility extends DfyStructure {
     ArrayList<TriggerSlot> triggerSlots;
     ArrayList<TriggerCase> triggerCases;
 
+    public DfyAbility(String displayName, String lore, ArrayList<TriggerSlot> slots, ArrayList<TriggerCase> triggerCases, String path, String className, boolean enabled, String id) {
+        super(null, 0);
+        this.displayName = displayName;
+        this.lore = lore;
+        this.path = path;
+        this.triggerSlots = slots;
+        this.triggerCases = triggerCases;
+        this.className = className;
+        this.enabled = enabled;
+        this.STRUCTURE_ID = id;
+    }
+
     public DfyAbility(File loadFile, int index) {
         super(loadFile, index);
-        importData();
     }
 
     public boolean isEnabled() {return enabled;}

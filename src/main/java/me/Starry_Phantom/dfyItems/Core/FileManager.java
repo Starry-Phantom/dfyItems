@@ -1,6 +1,7 @@
 package me.Starry_Phantom.dfyItems.Core;
 
 import me.Starry_Phantom.dfyItems.DfyItems;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -202,6 +203,7 @@ public class FileManager {
         boolean initResult;
         initResult = new StructureLoader<>(DfyAbility.class).load(abilityFolder, ABILITIES);
         if (!initResult) PLUGIN.severe("Could not load abilities for some reason!!");
+        ABILITIES.put("applicator", EffectApplicator.getAbilityObject());
 
         initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, ITEMS);
         if (!initResult) PLUGIN.severe("Could not load items for some reason!!");

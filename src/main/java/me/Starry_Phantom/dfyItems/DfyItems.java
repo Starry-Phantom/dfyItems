@@ -18,6 +18,8 @@ import java.util.stream.Stream;
 
 public final class DfyItems extends JavaPlugin {
 
+    public static DfyItems PLUGIN;
+
     private static final String SYSTEM_PREFIX = "[dfyItems]";
     private static final String PREFIX = "§8[§6dfy§bItems§8]§e ";
     private static final String PERMISSION_PREFIX = "§c[dfy] ";
@@ -26,6 +28,7 @@ public final class DfyItems extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+        PLUGIN = this;
         passPluginToClasses();
 
         FileManager.initialize();

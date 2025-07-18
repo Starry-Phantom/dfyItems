@@ -17,8 +17,8 @@ public abstract class DfyStructure {
     protected final int INDEX;
     protected String STRUCTURE_ID;
     protected Map<String, Object> data;
-    protected final static String DELIMITER = "|";
-    protected final static String SUB_DELIMITER = ":";
+    public final static String DELIMITER = "|";
+    public final static String SUB_DELIMITER = ":";
 
     protected boolean THROWN_LOAD_ERROR;
 

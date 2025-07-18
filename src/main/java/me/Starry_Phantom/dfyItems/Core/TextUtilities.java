@@ -8,7 +8,6 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
 import java.io.File;
-import java.time.format.TextStyle;
 import java.util.*;
 
 public class TextUtilities {

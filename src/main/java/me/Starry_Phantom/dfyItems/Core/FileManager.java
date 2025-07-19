@@ -2,6 +2,7 @@ package me.Starry_Phantom.dfyItems.Core;
 
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
+import me.Starry_Phantom.dfyItems.itemStructure.BlockFunctions.DfyRecipe;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -21,6 +22,8 @@ public class FileManager {
     private static DfyItems PLUGIN;
     private static Map<String, DfyItem> ITEMS;
     private static Map<String, DfyAbility> ABILITIES;
+    private static Map<String, DfyRecipe> RECIPE_IDS;
+    private static Map<Integer, DfyRecipe> RECIPE_HASHES;
     private static AbilityHandler ABILITY_HANDLER;
     private static final String COMPILED_FOLDER_NAMESPACE = ".compiled";
 
@@ -37,6 +40,8 @@ public class FileManager {
     public static boolean initialize() {
         ITEMS = new HashMap<>();
         ABILITIES = new HashMap<>();
+        RECIPE_IDS = new HashMap<>();
+        RECIPE_HASHES = new HashMap<>();
 
         boolean initResult = loadFiles();
         if (!initResult) PLUGIN.severe("Failed to initialize file structure!");
@@ -207,6 +212,15 @@ public class FileManager {
 
         initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, ITEMS);
         if (!initResult) PLUGIN.severe("Could not load items for some reason!!");
+
+        initResult = new StructureLoader<>(DfyRecipe.class).load(itemsFolder, RECIPE_IDS);
+        if (!initResult) PLUGIN.severe("Could not load recipes for some reason!!");
+
+        for (DfyRecipe recipe : RECIPE_IDS.values()) {
+            RECIPE_HASHES.put(recipe.getRecipe9Hash(), recipe);
+            if (recipe.has4Recipe()) RECIPE_HASHES.put(recipe.getRecipe4Hash(), recipe);
+
+        }
     }
 
     public static AbilityHandler createAbilityHandler() {

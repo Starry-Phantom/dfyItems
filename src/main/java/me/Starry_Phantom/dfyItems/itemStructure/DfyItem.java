@@ -102,6 +102,27 @@ public class DfyItem extends DfyStructure {
     }
 
 
+    private ItemStack build(Material m) {
+        ItemStack item = new ItemStack(m);
+        buildNBT(item);
+
+        ItemMeta meta = item.getItemMeta();
+        meta.lore(this.loreBuilder().build());
+        item.setItemMeta(meta);
+
+        return item;
+    }
+
+    private ItemStack build(ItemStack item) {
+        buildNBT(item);
+
+        ItemMeta meta = item.getItemMeta();
+        meta.lore(this.loreBuilder().build());
+        item.setItemMeta(meta);
+
+        return item;
+    }
+
     private ItemStack build() {
         ItemStack item = new ItemStack(material);
         buildNBT(item);

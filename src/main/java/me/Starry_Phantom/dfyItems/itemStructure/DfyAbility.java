@@ -41,7 +41,7 @@ public class DfyAbility extends DfyStructure {
     public static void reloadAbilitiesWithPath(String path) {
         for (Object o : FileManager.getAbilities().values().toArray()) {
             DfyAbility ability = (DfyAbility) o;
-            if (ability.getPath().equals(path)) {
+            if (Objects.equals(ability.getPath(), path)) {
                 FileManager.getAbilityHandler().recompile(ability);
             }
         }

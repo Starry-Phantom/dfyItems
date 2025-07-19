@@ -104,13 +104,7 @@ public class DfyItem extends DfyStructure {
 
     private ItemStack build(Material m) {
         ItemStack item = new ItemStack(m);
-        buildNBT(item);
-
-        ItemMeta meta = item.getItemMeta();
-        meta.lore(this.loreBuilder().build());
-        item.setItemMeta(meta);
-
-        return item;
+        return build(item);
     }
 
     private ItemStack build(ItemStack item) {
@@ -125,13 +119,7 @@ public class DfyItem extends DfyStructure {
 
     private ItemStack build() {
         ItemStack item = new ItemStack(material);
-        buildNBT(item);
-
-        ItemMeta meta = item.getItemMeta();
-        meta.lore(this.loreBuilder().build());
-        item.setItemMeta(meta);
-
-        return item;
+        return build(item);
     }
 
     private ItemStack buildSkeleton() {
@@ -158,6 +146,7 @@ public class DfyItem extends DfyStructure {
         setModel(meta);
         setGlint(meta);
         setMaxStackSize(meta);
+        if (maxStackSize == 1 || item.getMaxStackSize() == 1) setCreationDate(meta);
 
         if (rarity != null && type != null) {
             addRarityNBT(meta);
@@ -187,6 +176,28 @@ public class DfyItem extends DfyStructure {
         setConsumable(item);
         EffectApplicator.addEffectToItem(item, effects.toArray(new String[0]));
         hideFlags(item);
+    }
+
+    private void setCreationDate(ItemMeta meta) {
+        setCreationDate(meta, System.nanoTime());
+    }
+
+    public static void setCreationDate(ItemStack item, long time) {
+        ItemMeta meta = item.getItemMeta();
+        setCreationDate(meta, time);
+        item.setItemMeta(meta);
+    }
+
+    public static void setCreationDate(ItemMeta meta, long time) {
+        meta.getPersistentDataContainer().set(new NamespacedKey(PLUGIN, "creation_date"), PersistentDataType.LONG, time);
+
+    }
+
+    private static long getCreationDate(ItemStack item) {
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+        Long amount = container.get(new NamespacedKey(PLUGIN, "creation_date"), PersistentDataType.LONG);
+        if (amount == null) return -1;
+        return amount;
     }
 
     private void setMaxStackSize(ItemMeta meta) {
@@ -592,7 +603,12 @@ public class DfyItem extends DfyStructure {
 
         EffectApplicator.addEffectToItem(updateItem, EffectApplicator.getEffectsAsStrings(item));
 
-        updateItem.setAmount(item.getAmount());
+        int amount = item.getAmount();
+        if (amount > 1) updateItem.setAmount(amount);
+        if (updateItem.getMaxStackSize() == 1) {
+            long date = getCreationDate(item);
+            if (date != -1) setCreationDate(updateItem, date);
+        }
         DfyItem.rebuildLore(updateItem);
 
         return updateItem;

@@ -22,7 +22,7 @@ public class FileManager {
     private static Map<String, DfyItem> ITEMS;
     private static Map<String, DfyAbility> ABILITIES;
     private static AbilityHandler ABILITY_HANDLER;
-    private static final String COMPILED_FOLDER_NAMESPACE = "compiled (DO NOT EDIT) (FOR PLUGIN USE ONLY)";
+    private static final String COMPILED_FOLDER_NAMESPACE = ".compiled";
 
     private static File itemsFolder;
     private static File scriptFolder;

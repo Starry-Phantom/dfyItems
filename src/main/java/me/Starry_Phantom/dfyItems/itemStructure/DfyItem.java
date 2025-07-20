@@ -500,8 +500,7 @@ public class DfyItem extends DfyStructure {
         abilities = new ArrayList<>();
         loadArrayList("abilities", abilities, String.class);
 
-        effects = new ArrayList<>();
-        loadArrayList("effects", effects, String.class);
+        effects = null;
 
         initField("name", material.toString());
         glintNull = !initField("glint", false);

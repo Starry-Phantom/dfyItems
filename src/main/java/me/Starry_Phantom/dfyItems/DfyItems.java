@@ -2,6 +2,7 @@ package me.Starry_Phantom.dfyItems;
 
 import me.Starry_Phantom.dfyItems.Commands.*;
 import me.Starry_Phantom.dfyItems.Core.*;
+import me.Starry_Phantom.dfyItems.Core.Blocks.CraftingRecipeHandler;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -63,6 +64,7 @@ public final class DfyItems extends JavaPlugin {
         AbilityHandler abilityHandler = FileManager.createAbilityHandler();
         Bukkit.getPluginManager().registerEvents(abilityHandler, this);
         Bukkit.getPluginManager().registerEvents(new ItemUpdateHandler(this), this);
+        Bukkit.getPluginManager().registerEvents(new CraftingRecipeHandler(), this);
     }
 
 

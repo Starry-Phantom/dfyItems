@@ -31,6 +31,7 @@ public class FileManager {
     private static File scriptFolder;
     private static File abilityFolder;
     private static File compiledFoler;
+    private static File recipeFolder;
 
     private static File epochFile, backupEpochFile;
     private static Map<String, Integer> EPOCHS;
@@ -154,6 +155,7 @@ public class FileManager {
         File scriptFolder = makeFolderIfMissing("scripts");
         File abilityFolder = makeFolderIfMissing("abilities");
         File compileFolder = makeFolderIfMissing(COMPILED_FOLDER_NAMESPACE);
+        File recipeFolder = makeFolderIfMissing("recipes");
 
         epochFile = makeFileIfMissing("item_epochs.yml");
         backupEpochFile = makeFileIfMissing("item_epochs_backup.yml");
@@ -200,6 +202,7 @@ public class FileManager {
         itemsFolder = new File(dataFolder, "items");
         scriptFolder = new File(dataFolder, "scripts");
         abilityFolder = new File(dataFolder, "abilities");
+        recipeFolder = new File(dataFolder, "recipes");
         compiledFoler = new File(dataFolder, COMPILED_FOLDER_NAMESPACE);
         return true;
     }
@@ -213,7 +216,7 @@ public class FileManager {
         initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, ITEMS);
         if (!initResult) PLUGIN.severe("Could not load items for some reason!!");
 
-        initResult = new StructureLoader<>(DfyRecipe.class).load(itemsFolder, RECIPE_IDS);
+        initResult = new StructureLoader<>(DfyRecipe.class).load(recipeFolder, RECIPE_IDS);
         if (!initResult) PLUGIN.severe("Could not load recipes for some reason!!");
 
         for (DfyRecipe recipe : RECIPE_IDS.values()) {
@@ -342,5 +345,9 @@ public class FileManager {
 
     public static File getEpochFile() {
         return epochFile;
+    }
+
+    public static DfyRecipe getRecipe(int hash) {
+        return RECIPE_HASHES.get(hash);
     }
 }

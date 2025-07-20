@@ -50,6 +50,10 @@ public abstract class DfyStructure {
         for (DfyStructure structure : structArray) structures.add((T) structure);
     }
 
+    public static <T extends DfyStructure> void sortAlphabetical(T[] structArray) {
+        mergerHelper(structArray, 0, structArray.length / 2 - 1, structArray.length / 2, structArray.length - 1);
+    }
+
     private static void swap(DfyStructure[] arr, int index1, int index2) {
         DfyStructure swap = arr[index1];
         arr[index1] = arr[index2];

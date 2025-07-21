@@ -22,7 +22,12 @@ commands:
   get:
     description: 'Gives you an item :3'
     usage: /get <id> [amount] [player]
-    aliases: dgive, item-gui,dfis
+    aliases:
+      - dgive
+      - give
+      - item
+      - gui
+      - dfis
   dfyitems:
     description: Core plugin functions. Run for /dfyitems help for help!
     usage: /dfyitems

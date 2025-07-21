@@ -58,7 +58,7 @@ public class FileManager {
         return true;
     }
 
-    private static void loadEpochs() {
+    public static void loadEpochs() {
         Yaml yaml = new Yaml();
         try (InputStream input = new FileInputStream(epochFile)) {
             Map<String, Integer> temp = yaml.load(input);

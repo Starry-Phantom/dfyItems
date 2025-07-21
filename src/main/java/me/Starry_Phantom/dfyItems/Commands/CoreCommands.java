@@ -58,9 +58,18 @@ public class CoreCommands implements CommandExecutor {
             }
 
             String path = args[1];
-            if (path.matches("(items)|(abilities)|(scripts)|(recipes)|(config)|(all)")) {
-                // TODO: IMPLEMENT
-                return false;
+            if (path.matches("(epochs)|(all)")) {
+                if (path.matches("epochs")) {
+                    FileManager.loadEpochs();
+                } else {
+                    FileManager.loadEpochs();
+                    reloadScript("/scripts", commandSender);
+                    reloadFile("/abilities", commandSender, DfyAbility.class);
+                    reloadFile("/items", commandSender, DfyItem.class);
+
+                    reloadFile("/recipes", commandSender, DfyRecipe.class);
+                }
+                return true;
             }
 
             path = TextUtilities.correctPath(path);
@@ -87,7 +96,11 @@ public class CoreCommands implements CommandExecutor {
         long time = System.nanoTime();
 
         try {
-            DfyAbility.reloadAbilitiesWithPath(PLUGIN.getDataFolder().getCanonicalPath() + path);
+            File reloadFile = new File(PLUGIN.getDataFolder().getCanonicalPath() + path);
+            if (reloadFile.isDirectory()) {
+                reloadScriptsIn(reloadFile);
+            }
+            else DfyAbility.reloadAbilitiesWithPath(PLUGIN.getDataFolder().getCanonicalPath() + path);
         } catch (IOException e) {
             if (sender instanceof Player) sender.sendMessage(Component.text(PLUGIN.getPrefix() + "An error occurred while reloading §6'" + path + "'§e!"));
             PLUGIN.log("An error occurred while reloading '" + path + "'!");
@@ -98,6 +111,21 @@ public class CoreCommands implements CommandExecutor {
         if (sender instanceof Player) sender.sendMessage(Component.text(PLUGIN.getPrefix() + "Reloading §6'" + path + "'§e in " + timeToReload + "ms!" ));
         PLUGIN.log("Reloaded '" + path + "' in " + timeToReload + "ms!");
         return true;
+    }
+
+    private void reloadScriptsIn(File reloadFile) {
+        File[] files = reloadFile.listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (f.isDirectory()) reloadScriptsIn(f);
+            else {
+                try {
+                    DfyAbility.reloadAbilitiesWithPath(f.getCanonicalPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     private <T extends DfyStructure> boolean reloadFile(String path, CommandSender sender, Class<T> clazz) {

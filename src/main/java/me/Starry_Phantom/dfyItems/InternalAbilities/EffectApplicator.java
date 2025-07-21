@@ -88,6 +88,11 @@ public class EffectApplicator {
     }
 
     private static void applyEffectToItem(Player player, ItemStack item, ItemStack effect) {
+        if (!getEffects(item).isEmpty()) {
+            player.sendMessage("§cYou can only apply 1 effect to your item!");
+            return;
+        }
+
         ItemStack newItem = addEffectToItem(item.clone(), effect.clone());
         newItem = DfyItem.rebuildLore(newItem);
 

@@ -62,25 +62,27 @@ public class DfyItemLoreBuilder {
         }
 
         if (enchantments != null) {
-            DfyStructure.sortAlphabetical(enchantments);
-            DfyEnchantment.removeDuplicates(enchantments);
-            lore.addAll(DfyItem.getEnchantmentLore(enchantments));
-            lore.add(Component.text(""));
+            if (!enchantments.isEmpty()) {
+                DfyStructure.sortAlphabetical(enchantments);
+                DfyEnchantment.removeDuplicates(enchantments);
+                lore.addAll(DfyItem.getEnchantmentLore(enchantments));
+                lore.add(Component.text(""));
+            }
         }
 
         ArrayList<TextComponent> abilityLore = item.getAbilityLore();
         if (abilityLore != null) {
-            lore.addAll(abilityLore);
-            lore.add(Component.text(""));
+            if (!abilityLore.isEmpty()) {
+                lore.addAll(abilityLore);
+                lore.add(Component.text(""));
+            }
         }
 
         if (effects != null) {
-            lore.addAll(DfyItem.getEffectLore(effects));
+            if (!effects.isEmpty()) lore.addAll(DfyItem.getEffectLore(effects));
         }
 
         // TODO: Mystic Enchants go here! (Adding also in a future update...)
-
-        // TODO: Kill effects go here! (Adding in future update...)
 
         ArrayList<TextComponent> statLore = item.getStatLore();
 

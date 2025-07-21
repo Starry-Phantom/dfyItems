@@ -3,10 +3,19 @@ package me.Starry_Phantom.dfyItems;
 import me.Starry_Phantom.dfyItems.Commands.*;
 import me.Starry_Phantom.dfyItems.Core.*;
 import me.Starry_Phantom.dfyItems.Core.Blocks.CraftingRecipeHandler;
+import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
+import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public final class DfyItems extends JavaPlugin {
 
@@ -45,16 +54,8 @@ public final class DfyItems extends JavaPlugin {
     }
 
     private void registerCommands() {
-        PluginCommand command = this.getCommand("get");
-        GetCommand getCommand = new GetCommand(this);
-        command.setExecutor(getCommand);
-        command.setTabCompleter(getCommand);
-
-        CoreCommands coreCommands = new CoreCommands(this);
-        command = this.getCommand("dfyitems");
-        command.setExecutor(coreCommands);
-        command.setTabCompleter(coreCommands);
-
+        this.getCommand("get").setExecutor(new GetCommand(this));
+        this.getCommand("dfyitems").setExecutor( new CoreCommands(this));
         this.getCommand("transmute").setExecutor(new TransmuteCommand(this));
         this.getCommand("enchant").setExecutor(new EnchantCommand(this));
     }

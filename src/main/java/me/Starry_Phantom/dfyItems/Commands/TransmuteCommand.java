@@ -6,12 +6,17 @@ import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class TransmuteCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.List;
+
+public class TransmuteCommand implements CommandExecutor, TabCompleter {
     private final DfyItems PLUGIN;
 
     public TransmuteCommand(DfyItems plugin) {this.PLUGIN = plugin;}
@@ -48,5 +53,12 @@ public class TransmuteCommand implements CommandExecutor {
         player.getInventory().setItemInMainHand(transItem);
         player.sendMessage(PLUGIN.getPrefix() + "Transmuted §6'" + id + "'§e to §6'" + target.getID() + "'");
         return true;
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+        if (!commandSender.hasPermission("dfyitems.transmute")) return List.of();
+        if (args.length == 1) return List.of(FileManager.getItems().keySet().toArray(new String[0]));
+        return List.of();
     }
 }

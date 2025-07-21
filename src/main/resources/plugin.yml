@@ -10,6 +10,9 @@ permissions:
   dfyitems.transmute:
     description: Allows access to the /transmute command
     default: op
+  dfyitems.enchant:
+    description: Allows access to the /enchant command
+    default: op
   dfyitems.get.access:
     description: Allows access to the /get command
     default: op

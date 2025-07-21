@@ -367,4 +367,45 @@ public class FileManager {
     public static DfyRecipe getRecipe(int hash) {
         return RECIPE_HASHES.get(hash);
     }
+
+    public static ArrayList<String> getAllFilePaths() {
+        ArrayList<String> strings = new ArrayList<>();
+        getAllFilePathsHelper(itemsFolder, strings);
+        getAllFilePathsHelper(abilityFolder, strings);
+        getAllFilePathsHelper(scriptFolder, strings);
+        getAllFilePathsHelper(recipeFolder, strings);
+        stripPath(PLUGIN.getDataFolder(), strings);
+        return strings;
+    }
+
+    private static void stripPath(File strip, ArrayList<String> strings) {
+        String stripPath;
+        try {
+            stripPath = strip.getCanonicalPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (int i = 0; i < strings.size(); i++) {
+            strings.set(i, strings.get(i).replace(stripPath, ""));
+        }
+    }
+
+    private static void getAllFilePathsHelper(File file, ArrayList<String> strings) {
+        try {
+            strings.add(file.getCanonicalPath());
+            if (file.isDirectory()) {
+                File[] files = file.listFiles();
+                if (files == null) return;
+                for (File f : files) {
+                    strings.add(f.getCanonicalPath());
+                    if (f.isDirectory()) getAllFilePathsHelper(f, strings);
+
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 }

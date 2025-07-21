@@ -7,6 +7,7 @@ import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -55,7 +56,11 @@ public final class DfyItems extends JavaPlugin {
 
     private void registerCommands() {
         this.getCommand("get").setExecutor(new GetCommand(this));
-        this.getCommand("dfyitems").setExecutor(new CoreCommands(this));
+        CoreCommands c = new CoreCommands(this);
+        PluginCommand dfyitems = this.getCommand("dfyitems");
+        dfyitems.setExecutor(c);
+        dfyitems.setTabCompleter(c);
+
         this.getCommand("transmute").setExecutor(new TransmuteCommand(this));
         this.getCommand("enchant").setExecutor(new EnchantCommand(this));
     }

@@ -12,15 +12,19 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class CoreCommands implements CommandExecutor {
+public class CoreCommands implements CommandExecutor, TabCompleter {
     private final DfyItems PLUGIN;
 
     public CoreCommands(DfyItems plugin) {
@@ -176,5 +180,19 @@ public class CoreCommands implements CommandExecutor {
     private boolean sendHelp(CommandSender commandSender) {
         //TODO: IMPLEMENT
         return true;
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+        if (!commandSender.hasPermission("dfyitems.manage")) return List.of();
+        if (args.length == 1) return List.of("help", "reload");
+        if (args.length == 2) {
+            ArrayList<String> strings = new ArrayList<>();
+            strings.add("all");
+            strings.add("epochs");
+            strings.addAll(FileManager.getAllFilePaths());
+            return strings;
+        }
+        return List.of();
     }
 }

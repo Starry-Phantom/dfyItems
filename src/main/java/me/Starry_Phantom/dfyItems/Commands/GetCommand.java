@@ -130,7 +130,7 @@ public class GetCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         if (!commandSender.hasPermission("dfyitems.get.access")) return List.of();
         ArrayList<String> strings = new ArrayList<>();
-        if (args.length == 1) strings.addAll(List.of(FileManager.getItems().keySet().toArray(new String[0])));
+        if (args.length == 1) strings.addAll(FileManager.getItemTabcompletes(args[0]));
         else if (args.length <= 3) {
             if (args.length == 3) {
                 try {

@@ -408,4 +408,13 @@ public class FileManager {
         }
 
     }
+
+    public static List<String> getItemTabcompletes(String arg) {
+        ArrayList<String> strings = new ArrayList<>(List.of(FileManager.getItems().keySet().toArray(new String[0])));
+        for (int i = 0; i < strings.size(); i++) if (!strings.get(i).contains(arg.toUpperCase())) {
+            strings.remove(i);
+            i--;
+        }
+        return strings;
+    }
 }

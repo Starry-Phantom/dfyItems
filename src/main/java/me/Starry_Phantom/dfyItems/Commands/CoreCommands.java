@@ -191,6 +191,10 @@ public class CoreCommands implements CommandExecutor, TabCompleter {
             strings.add("all");
             strings.add("epochs");
             strings.addAll(FileManager.getAllFilePaths());
+            for (int i = 0; i < strings.size(); i++) if (!strings.get(i).toUpperCase().contains(args[1].toUpperCase())) {
+                strings.remove(i);
+                i--;
+            }
             return strings;
         }
         return List.of();

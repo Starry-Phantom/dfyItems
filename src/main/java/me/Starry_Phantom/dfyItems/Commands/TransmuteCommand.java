@@ -58,7 +58,7 @@ public class TransmuteCommand implements CommandExecutor, TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         if (!commandSender.hasPermission("dfyitems.transmute")) return List.of();
-        if (args.length == 1) return List.of(FileManager.getItems().keySet().toArray(new String[0]));
+        if (args.length == 1) return FileManager.getItemTabcompletes(args[0]);
         return List.of();
     }
 }

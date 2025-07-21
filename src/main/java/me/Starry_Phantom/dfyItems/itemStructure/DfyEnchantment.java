@@ -84,7 +84,7 @@ public class DfyEnchantment extends DfyStructure {
         return appliedEnchants;
     }
 
-    private static void removeDuplicates(ArrayList<DfyEnchantment> appliedEnchants) {
+    public static void removeDuplicates(ArrayList<DfyEnchantment> appliedEnchants) {
         for (int i = 0; i < appliedEnchants.size() - 1; i++) {
             DfyEnchantment first = appliedEnchants.get(i);
             DfyEnchantment second = appliedEnchants.get(i + 1);

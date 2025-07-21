@@ -136,4 +136,12 @@ public class RecipeComponent {
         return id;
     }
 
+    public void setAmount(int newAmount) {
+        this.amount = newAmount;
+        if (amount == 0) {
+            this.item = null;
+            this.id = null;
+            this.amount = -1;
+        }
+    }
 }

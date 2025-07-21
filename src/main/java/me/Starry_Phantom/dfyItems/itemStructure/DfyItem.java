@@ -153,8 +153,8 @@ public class DfyItem extends DfyStructure {
         }
 
 
+        addEnchantmentNBT(meta);
         if (enchantments != null) {
-            addEnchantmentNBT(meta);
             meta.addEnchant(Enchantment.MENDING, 1, true);
         }
 
@@ -174,7 +174,10 @@ public class DfyItem extends DfyStructure {
 
         setEquippable(item);
         setConsumable(item);
-        EffectApplicator.addEffectToItem(item, effects.toArray(new String[0]));
+
+        String[] effectArray = new String[0];
+        if (effects != null) effectArray = effects.toArray(new String[0]);
+        EffectApplicator.addEffectToItem(item, effectArray);
         hideFlags(item);
     }
 
@@ -358,14 +361,13 @@ public class DfyItem extends DfyStructure {
     }
 
     private void addEnchantmentNBT(ItemMeta meta) {
-        if (enchantments == null) return;
         NamespacedKey topKey = new NamespacedKey(PLUGIN, "enchantments");
 
         PersistentDataContainer root = meta.getPersistentDataContainer();
         PersistentDataContainer enchantStorage = root.getAdapterContext().newPersistentDataContainer();
 
         NamespacedKey enchantmentKey = new NamespacedKey(PLUGIN, "default");
-        enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
+        if (enchantments != null) enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
         enchantStorage.set(new NamespacedKey(PLUGIN, "applied"), PersistentDataType.STRING, "");
 
         root.set(topKey, PersistentDataType.TAG_CONTAINER, enchantStorage);
@@ -557,7 +559,7 @@ public class DfyItem extends DfyStructure {
     public ItemStack getItem() {
         if (THROWN_LOAD_ERROR) return null;
         if (item == null) item = build();
-        return item;
+        return item.clone();
     }
 
     public static boolean isValidItem(ItemStack item) {

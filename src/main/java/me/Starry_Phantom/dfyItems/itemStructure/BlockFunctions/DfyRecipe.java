@@ -29,6 +29,26 @@ public class DfyRecipe extends DfyStructure {
         return Objects.hash(hashString.toString());
     }
 
+    public static ItemStack[] toItemStackMatrix(RecipeComponent[] components) {
+        ItemStack[] items = new ItemStack[components.length];
+        for (int i = 0; i < components.length; i++) {
+            items[i] = components[i].getItem();
+            if (items[i] != null) items[i].setAmount(components[i].getAmount());
+        }
+        return items;
+    }
+
+    public static DfyRecipe getRecipe(RecipeComponent[] matrix) {
+        DfyRecipe recipe = FileManager.getRecipe(DfyRecipe.getHash(matrix, false));
+        if (recipe == null) {
+            RecipeComponent[] sortedMatrix = new RecipeComponent[matrix.length];
+            System.arraycopy(matrix, 0, sortedMatrix, 0, matrix.length);
+            RecipeComponent.sortAlphabetical(sortedMatrix);
+            recipe = FileManager.getRecipe(DfyRecipe.getHash(sortedMatrix, true));
+        }
+        return recipe;
+    }
+
     private void createMatrices() {
         recipe_9 = new RecipeComponent[9];
         int i = 0;
@@ -101,7 +121,9 @@ public class DfyRecipe extends DfyStructure {
     }
 
     public ItemStack getPlainResult() {
-        return FileManager.getItem(result).getItem();
+        ItemStack retVal = FileManager.getItem(result).getItem();
+        retVal.setAmount(resultAmount);
+        return retVal;
     }
 
     public ItemStack getResult(RecipeComponent[] recipeMatrix) {
@@ -116,6 +138,7 @@ public class DfyRecipe extends DfyStructure {
             else return getPlainResult();
 
             for (RecipeComponent comp : recipeMatrix) {
+                if (comp.getItem() == null) continue;
                 if (Objects.equals(comp.getID(), query)) transferItem = comp;
             }
             if (transferItem == null) return getPlainResult();
@@ -137,6 +160,13 @@ public class DfyRecipe extends DfyStructure {
             recipeMatrix = recipe_4;
         } else recipeMatrix = recipe_9;
 
+        if (shapeless) {
+            RecipeComponent[] sortedMatrix = new RecipeComponent[comparison.length];
+            System.arraycopy(comparison, 0, sortedMatrix, 0, comparison.length);
+            RecipeComponent.sortAlphabetical(sortedMatrix);
+            comparison = sortedMatrix;
+        }
+
         for (int i = 0; i < comparison.length; i++) {
             if (comparison[i].getAmount() < recipeMatrix[i].getAmount()) return false;
             ItemStack compItem = comparison[i].getItem();
@@ -148,5 +178,46 @@ public class DfyRecipe extends DfyStructure {
         }
 
         return true;
+    }
+
+    public int getMaxCraftable(RecipeComponent[] comparison) {
+        RecipeComponent[] base;
+        if (comparison.length == 4) base = recipe_4;
+        else base = recipe_9;
+
+        int amount = 1;
+        for (int i = 0; i < comparison.length; i++) {
+            if (comparison[i].getID() == null) continue;
+
+            amount = Math.min(amount, comparison[i].getAmount() / base[i].getAmount());
+        }
+        return amount;
+    }
+
+    public void craft(RecipeComponent[] input, int amount) {
+        RecipeComponent[] base;
+        if (input.length == 4) base = recipe_4;
+        else base = recipe_9;
+
+        if (shapeless) {
+            RecipeComponent[] sortedMatrix = new RecipeComponent[input.length];
+            System.arraycopy(input, 0, sortedMatrix, 0, input.length);
+            RecipeComponent.sortAlphabetical(sortedMatrix);
+            input = sortedMatrix;
+        }
+
+        for (int i = 0; i < input.length; i++) {
+            RecipeComponent item = input[i];
+            if (item.getID() == null) continue;;
+
+            int newAmount = item.getAmount();
+            newAmount = newAmount - (base[i].getAmount() * amount);
+            item.setAmount(newAmount);
+        }
+
+    }
+
+    public int getResultAmount() {
+        return resultAmount;
     }
 }

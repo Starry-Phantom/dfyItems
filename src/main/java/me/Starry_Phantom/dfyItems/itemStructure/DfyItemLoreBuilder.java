@@ -23,8 +23,10 @@ public class DfyItemLoreBuilder {
 
     public DfyItemLoreBuilder(DfyItem item) {
         this.item = item;
-        this.enchantments = item.getEnchantments();
-        this.effects = FileManager.getAbilities(item.getEffects());
+        if (item.getEnchantments() != null) this.enchantments = new ArrayList<>(item.getEnchantments());
+        else this.enchantments = null;
+        if (item.getEffects() == null) this.effects = null;
+        else this.effects = FileManager.getAbilities(item.getEffects());
     }
 
     public DfyItemLoreBuilder enchants(ArrayList<DfyEnchantment> enchantments) {
@@ -61,6 +63,7 @@ public class DfyItemLoreBuilder {
 
         if (enchantments != null) {
             DfyStructure.sortAlphabetical(enchantments);
+            DfyEnchantment.removeDuplicates(enchantments);
             lore.addAll(DfyItem.getEnchantmentLore(enchantments));
             lore.add(Component.text(""));
         }

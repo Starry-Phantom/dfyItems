@@ -86,23 +86,16 @@ public class CraftingRecipeHandler implements Listener {
             result.setAmount(originalAmount + amount * recipe.getResultAmount());
         }
 
-        System.out.println("C: " + Arrays.toString(matrix));
         recipe.craft(matrix, amount);
         ItemStack[] newMatrix = DfyRecipe.toItemStackMatrix(matrix);
 
-        System.out.println("D: " + Arrays.toString(newMatrix));
-
         inv.setResult(null);
         inv.setMatrix(newMatrix);
-
-        System.out.println("E: " + result.getAmount());
 
         switch (craftTarget) {
             case CraftTarget.INVENTORY -> player.getInventory().addItem(result);
             case CraftTarget.CURSOR -> player.setItemOnCursor(result);
         }
-
-        System.out.println("F: " + result.getAmount());
 
     }
 }

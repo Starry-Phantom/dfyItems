@@ -4,6 +4,7 @@ import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.StructureLoader;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.DfyItems;
+import me.Starry_Phantom.dfyItems.itemStructure.BlockFunctions.DfyRecipe;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -57,7 +58,7 @@ public class CoreCommands implements CommandExecutor {
             }
 
             String path = args[1];
-            if (path.matches("(items)|(abilities)|(scripts)|(config)|(all)")) {
+            if (path.matches("(items)|(abilities)|(scripts)|(recipes)|(config)|(all)")) {
                 // TODO: IMPLEMENT
                 return false;
             }
@@ -71,6 +72,7 @@ public class CoreCommands implements CommandExecutor {
                 case "items" -> reloadFile(path, commandSender, DfyItem.class);
                 case "abilities" -> reloadFile(path, commandSender, DfyAbility.class);
                 case "scripts" -> reloadScript(path, commandSender);
+                case "recipes" -> reloadFile(path, commandSender, DfyRecipe.class);
                 default -> false;
             };
 

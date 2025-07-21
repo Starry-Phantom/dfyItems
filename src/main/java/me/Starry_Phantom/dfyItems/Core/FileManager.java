@@ -239,6 +239,23 @@ public class FileManager {
             if (ITEMS.containsKey(key)) ITEMS.replace(key, (DfyItem) storage.get(key));
             else ITEMS.put(key, (DfyItem) storage.get(key));
         }
+
+        if (clazz == DfyRecipe.class) for (String key : keys) {
+            if (RECIPE_IDS.containsKey(key)) {
+                DfyRecipe old = RECIPE_IDS.get(key);
+                RECIPE_HASHES.remove(old.getRecipe9Hash());
+                if (old.has4Recipe()) RECIPE_HASHES.remove(old.getRecipe4Hash());
+
+                RECIPE_IDS.replace(key, (DfyRecipe) storage.get(key));
+            }
+            else RECIPE_IDS.put(key, (DfyRecipe) storage.get(key));
+
+            DfyRecipe recipe = RECIPE_IDS.get(key);
+            RECIPE_HASHES.put(recipe.getRecipe9Hash(), recipe);
+            if (recipe.has4Recipe()) RECIPE_HASHES.put(recipe.getRecipe4Hash(), recipe);
+
+        }
+
         if (clazz == DfyAbility.class) { for (String key : keys) {
             ArrayList<String> replaceKeys = new ArrayList<>();
             DfyAbility ability = (DfyAbility) storage.get(key);

@@ -90,6 +90,7 @@ public class DfyItemLoreBuilder {
             DfyAbility ability = FileManager.getAbility(mysticEnchant);
             if (ability != null) {
                 lore.addAll(TextUtilities.insertIntoComponents(ability.getLoreBlock("§5\uD83D\uDCDA §d")));
+                lore.add(Component.text(""));
             }
         }
 

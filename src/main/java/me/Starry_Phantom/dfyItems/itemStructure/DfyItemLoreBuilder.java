@@ -1,6 +1,7 @@
 package me.Starry_Phantom.dfyItems.itemStructure;
 
 import me.Starry_Phantom.dfyItems.Core.FileManager;
+import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -13,11 +14,13 @@ public class DfyItemLoreBuilder {
     private DfyItem item;
     private ArrayList<DfyEnchantment> enchantments;
     private ArrayList<DfyAbility> effects;
+    private String mysticEnchant;
 
     public DfyItemLoreBuilder(ItemStack item) {
         this.item = DfyItem.getBaseItem(item);
         this.enchantments = DfyEnchantment.getDefaultEnchants(item);
         addEnchants(DfyEnchantment.getAppliedEnchants(item));
+        this.mysticEnchant = DfyEnchantment.getMysticEnchant(item);
         effects(EffectApplicator.getEffects(item));
     }
 
@@ -25,6 +28,7 @@ public class DfyItemLoreBuilder {
         this.item = item;
         if (item.getEnchantments() != null) this.enchantments = new ArrayList<>(item.getEnchantments());
         else this.enchantments = null;
+        this.mysticEnchant = item.getMysticEnchant();
         if (item.getEffects() == null) this.effects = null;
         else this.effects = FileManager.getAbilities(item.getEffects());
     }
@@ -82,7 +86,12 @@ public class DfyItemLoreBuilder {
             if (!effects.isEmpty()) lore.addAll(DfyItem.getEffectLore(effects));
         }
 
-        // TODO: Mystic Enchants go here! (Adding also in a future update...)
+        if (mysticEnchant != null) {
+            DfyAbility ability = FileManager.getAbility(mysticEnchant);
+            if (ability != null) {
+                lore.addAll(TextUtilities.insertIntoComponents(ability.getLoreBlock("§5\uD83D\uDCDA §d")));
+            }
+        }
 
         ArrayList<TextComponent> statLore = item.getStatLore();
 

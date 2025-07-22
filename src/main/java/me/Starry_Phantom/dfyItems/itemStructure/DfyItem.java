@@ -37,6 +37,7 @@ public class DfyItem extends DfyStructure {
     boolean glint, glintNull;
     private ArrayList<DfyEnchantment> enchantments;
     private ArrayList<String> abilities, effects;
+    private String mysticEnchant;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
     int maxStackSize;
 
@@ -369,7 +370,7 @@ public class DfyItem extends DfyStructure {
         NamespacedKey enchantmentKey = new NamespacedKey(PLUGIN, "default");
         if (enchantments != null) enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
         enchantStorage.set(new NamespacedKey(PLUGIN, "applied"), PersistentDataType.STRING, "");
-
+        enchantStorage.set(new NamespacedKey(PLUGIN, "mystic"), PersistentDataType.STRING, Objects.requireNonNullElse(mysticEnchant, ""));
         root.set(topKey, PersistentDataType.TAG_CONTAINER, enchantStorage);
 
     }
@@ -468,7 +469,7 @@ public class DfyItem extends DfyStructure {
                 lore.addAll(TextUtilities.insertIntoComponents(ability.getLoreBlock()));
                 lore.add(Component.text(""));
             }
-            lore.removeLast();
+            if (!lore.isEmpty()) lore.removeLast();
             return lore;
         }
         return null;
@@ -521,7 +522,7 @@ public class DfyItem extends DfyStructure {
         if (data.containsKey("equippable")) equippable = (Map<String, Object>) data.get("equippable");
         else equippable = null;
 
-        for (String s : new String[]{"rarity", "type", "longLore", "shortLore", "model"}) {
+        for (String s : new String[]{"rarity", "type", "longLore", "shortLore", "model", "mysticEnchant"}) {
             initField(s, "");
         }
 
@@ -691,6 +692,7 @@ public class DfyItem extends DfyStructure {
         if (!Objects.equals(effects, item.getEffects())) return false;
 
         if (!Objects.equals(enchantments, item.getEnchantments())) return false;
+        if (!Objects.equals(mysticEnchant, item.getMysticEnchant())) return false;
         if (glintNull != item.isGlintNull()) return false;
         if (glint != item.isGlint()) return false;
 
@@ -698,5 +700,9 @@ public class DfyItem extends DfyStructure {
         if (!Objects.equals(consumable, item.getConsumable())) return false;
 
         return true;
+    }
+
+    public String getMysticEnchant() {
+        return mysticEnchant;
     }
 }

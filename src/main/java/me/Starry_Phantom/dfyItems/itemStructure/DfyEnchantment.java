@@ -151,6 +151,14 @@ public class DfyEnchantment extends DfyStructure {
         return enchantBlock.toString();
     }
 
+    public static String getMysticEnchant(ItemStack item) {
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "enchantments"), PersistentDataType.TAG_CONTAINER);
+        if (container == null) return null;
+
+        String enchants = container.get(new NamespacedKey(PLUGIN, "mystic"), PersistentDataType.STRING);
+        return enchants;
+    }
+
     public String getRomanLevel() {
         return TextUtilities.getRomanNumeral(level);
     }

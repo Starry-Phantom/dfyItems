@@ -2,6 +2,7 @@ package me.Starry_Phantom.dfyItems;
 
 import me.Starry_Phantom.dfyItems.Commands.*;
 import me.Starry_Phantom.dfyItems.Core.*;
+import me.Starry_Phantom.dfyItems.Core.Blocks.CraftingRecipeHandler;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -18,6 +19,8 @@ import java.util.stream.Stream;
 
 public final class DfyItems extends JavaPlugin {
 
+    public static DfyItems PLUGIN;
+
     private static final String SYSTEM_PREFIX = "[dfyItems]";
     private static final String PREFIX = "§8[§6dfy§bItems§8]§e ";
     private static final String PERMISSION_PREFIX = "§c[dfy] ";
@@ -26,6 +29,7 @@ public final class DfyItems extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+        PLUGIN = this;
         passPluginToClasses();
 
         FileManager.initialize();
@@ -38,7 +42,7 @@ public final class DfyItems extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         FileManager.deleteCompiledFolder();
-        FileManager.saveEpochs(FileManager.getEpochFile());
+        FileManager.finalSaveEpochs(FileManager.getEpochFile());
     }
 
     private void passPluginToClasses() {
@@ -51,7 +55,7 @@ public final class DfyItems extends JavaPlugin {
 
     private void registerCommands() {
         this.getCommand("get").setExecutor(new GetCommand(this));
-        this.getCommand("dfyitems").setExecutor(new CoreCommands(this));
+        this.getCommand("dfyitems").setExecutor( new CoreCommands(this));
         this.getCommand("transmute").setExecutor(new TransmuteCommand(this));
         this.getCommand("enchant").setExecutor(new EnchantCommand(this));
     }
@@ -60,6 +64,7 @@ public final class DfyItems extends JavaPlugin {
         AbilityHandler abilityHandler = FileManager.createAbilityHandler();
         Bukkit.getPluginManager().registerEvents(abilityHandler, this);
         Bukkit.getPluginManager().registerEvents(new ItemUpdateHandler(this), this);
+        Bukkit.getPluginManager().registerEvents(new CraftingRecipeHandler(), this);
     }
 
 

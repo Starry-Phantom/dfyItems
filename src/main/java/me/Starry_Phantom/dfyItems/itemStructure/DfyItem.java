@@ -3,17 +3,18 @@ package me.Starry_Phantom.dfyItems.itemStructure;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.Equippable;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -22,6 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.io.File;
 import java.util.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class DfyItem extends DfyStructure {
     private static final String ENCHANT_COLOR = "§r§d";
     private static final String NEGATIVE_STAT_COLOR = "§r§c";
@@ -32,10 +34,12 @@ public class DfyItem extends DfyStructure {
     private String rarity, type, model;
     private Material material;
     private String longLore, shortLore;
-    boolean glint, glintNull, wearableNull;
+    boolean glint, glintNull;
     private ArrayList<DfyEnchantment> enchantments;
-    private ArrayList<String> abilities;
+    private ArrayList<String> abilities, effects;
+    private String mysticEnchant;
     private ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> stats;
+    int maxStackSize;
 
     private Map<String, Object> consumable, equippable;
 
@@ -86,36 +90,72 @@ public class DfyItem extends DfyStructure {
         return item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER).get(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER);
     }
 
+    public static ItemStack rebuildLore(ItemStack item) {
+        if (!isValidItem(item)) return item;
 
-    private ItemStack build() {
-        ItemStack item = new ItemStack(material);
-        buildNBT(item);
-
+        DfyItem base = getBaseItem(item);
+        ArrayList<TextComponent> lore = loreBuilder(item).build();
         ItemMeta meta = item.getItemMeta();
-        meta.lore(buildLore());
+        meta.lore(lore);
         item.setItemMeta(meta);
 
         return item;
+    }
+
+
+    private ItemStack build(Material m) {
+        ItemStack item = new ItemStack(m);
+        return build(item);
+    }
+
+    private ItemStack build(ItemStack item) {
+        buildNBT(item);
+
+        ItemMeta meta = item.getItemMeta();
+        meta.lore(this.loreBuilder().build());
+        item.setItemMeta(meta);
+
+        return item;
+    }
+
+    private ItemStack build() {
+        ItemStack item = new ItemStack(material);
+        return build(item);
+    }
+
+    private ItemStack buildSkeleton() {
+        ItemStack item = new ItemStack(material);
+        buildNBT(item);
+        return item;
+    }
+
+    public DfyItemLoreBuilder loreBuilder() {
+        return new DfyItemLoreBuilder(this);
+    }
+
+    public static DfyItemLoreBuilder loreBuilder(ItemStack item) {
+        return new DfyItemLoreBuilder(item);
     }
 
     private void buildNBT(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         meta.setUnbreakable(true);
 
-        hideFlags(meta);
         addIDtoNBT(meta);
 
         setName(meta);
         setModel(meta);
         setGlint(meta);
+        setMaxStackSize(meta);
+        if (maxStackSize == 1 || item.getMaxStackSize() == 1) setCreationDate(meta);
 
         if (rarity != null && type != null) {
             addRarityNBT(meta);
         }
 
 
+        addEnchantmentNBT(meta);
         if (enchantments != null) {
-            addEnchantmentNBT(meta);
             meta.addEnchant(Enchantment.MENDING, 1, true);
         }
 
@@ -123,9 +163,7 @@ public class DfyItem extends DfyStructure {
             addAbilityNBT(meta);
         }
 
-        // TODO: Mystic Enchants go here! (Adding also in a future update...)
-
-        // TODO: Kill effects go here! (Adding in future update...)
+        // TODO: Mystic Enchants go here! (Adding in a future update...)
 
         if (stats != null) {
             addStatNBT(meta);
@@ -137,6 +175,37 @@ public class DfyItem extends DfyStructure {
 
         setEquippable(item);
         setConsumable(item);
+
+        String[] effectArray = new String[0];
+        if (effects != null) effectArray = effects.toArray(new String[0]);
+        EffectApplicator.addEffectToItem(item, effectArray);
+        hideFlags(item);
+    }
+
+    private void setCreationDate(ItemMeta meta) {
+        setCreationDate(meta, System.nanoTime());
+    }
+
+    public static void setCreationDate(ItemStack item, long time) {
+        ItemMeta meta = item.getItemMeta();
+        setCreationDate(meta, time);
+        item.setItemMeta(meta);
+    }
+
+    public static void setCreationDate(ItemMeta meta, long time) {
+        meta.getPersistentDataContainer().set(new NamespacedKey(PLUGIN, "creation_date"), PersistentDataType.LONG, time);
+
+    }
+
+    private static long getCreationDate(ItemStack item) {
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+        Long amount = container.get(new NamespacedKey(PLUGIN, "creation_date"), PersistentDataType.LONG);
+        if (amount == null) return -1;
+        return amount;
+    }
+
+    private void setMaxStackSize(ItemMeta meta) {
+        if (maxStackSize != -1) meta.setMaxStackSize(maxStackSize);
     }
 
     private void addEpochNBT(ItemMeta meta) {
@@ -146,46 +215,6 @@ public class DfyItem extends DfyStructure {
         epochs.set(new NamespacedKey(PLUGIN, "GLOBAL"), PersistentDataType.INTEGER, FileManager.getGlobalEpoch());
         epochs.set(new NamespacedKey(PLUGIN, STRUCTURE_ID), PersistentDataType.INTEGER, FileManager.getItemEpoch(STRUCTURE_ID));
         root.set(new NamespacedKey(PLUGIN, "epochs"), PersistentDataType.TAG_CONTAINER, epochs);
-    }
-
-    public ArrayList<TextComponent> buildLore() {return buildLore(enchantments);}
-
-    public ArrayList<TextComponent> buildLore(ArrayList<DfyEnchantment> enchantments) {
-        ArrayList<TextComponent> lore = new ArrayList<>();
-
-        if (shortLore != null) lore.add(getShortLore());
-
-        if (rarity != null && type != null) {
-            lore.add(getRarityDisplayLore());
-            lore.add(Component.text(""));
-        }
-
-        if (longLore != null) {
-            lore.addAll(getLongLore());
-            lore.add(Component.text(""));
-        }
-
-        if (enchantments != null) {
-            lore.addAll(getEnchantmentLore(enchantments));
-            lore.add(Component.text(""));
-        }
-
-        if (!abilities.isEmpty()) {
-            lore.addAll(getAbilityLore());
-            lore.add(Component.text(""));
-        }
-
-        // TODO: Mystic Enchants go here! (Adding also in a future update...)
-
-        // TODO: Kill effects go here! (Adding in future update...)
-
-        if (stats != null) {
-            lore.addAll(getStatLore());
-        }
-
-        if (!lore.isEmpty() && lore.getLast().equals(Component.text(""))) lore.removeLast();
-
-        return lore;
     }
 
     private void setConsumable(ItemStack item) {
@@ -289,7 +318,7 @@ public class DfyItem extends DfyStructure {
         return String.join(DELIMITER, statNBTBlock);
     }
 
-    private ArrayList<TextComponent> getStatLore() {
+    public ArrayList<TextComponent> getStatLore() {
         if (stats == null) return null;
         ArrayList<TextComponent> lore = new ArrayList<>();
         for (Map<TriggerSlot, ArrayList<Map<String, Object>>> stat : stats) {
@@ -333,24 +362,36 @@ public class DfyItem extends DfyStructure {
     }
 
     private void addEnchantmentNBT(ItemMeta meta) {
-        if (enchantments == null) return;
         NamespacedKey topKey = new NamespacedKey(PLUGIN, "enchantments");
 
         PersistentDataContainer root = meta.getPersistentDataContainer();
         PersistentDataContainer enchantStorage = root.getAdapterContext().newPersistentDataContainer();
 
         NamespacedKey enchantmentKey = new NamespacedKey(PLUGIN, "default");
-        enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
+        if (enchantments != null) enchantStorage.set(enchantmentKey, PersistentDataType.STRING, DfyEnchantment.buildEnchantNBTString(enchantments));
         enchantStorage.set(new NamespacedKey(PLUGIN, "applied"), PersistentDataType.STRING, "");
-
+        enchantStorage.set(new NamespacedKey(PLUGIN, "mystic"), PersistentDataType.STRING, Objects.requireNonNullElse(mysticEnchant, ""));
         root.set(topKey, PersistentDataType.TAG_CONTAINER, enchantStorage);
 
     }
 
-    public ArrayList<TextComponent> getEnchantmentLore(ArrayList<DfyEnchantment> enchantments) {
+    public static ArrayList<TextComponent> getEnchantmentLore(ArrayList<DfyEnchantment> enchantments) {
         if (enchantments == null) return null;
         String enchantString = DfyEnchantment.buildEnchantString(enchantments);
         return TextUtilities.insertIntoComponents(TextUtilities.wrapText(enchantString, ENCHANT_COLOR));
+    }
+
+    public static ArrayList<TextComponent> getEffectLore(ArrayList<DfyAbility> effects) {
+        if (effects == null) return null;
+        ArrayList<TextComponent> lore = new ArrayList<>();
+
+        for (DfyAbility effect : effects) {
+            lore.addAll(TextUtilities.insertIntoComponents(effect.getLoreBlock()));
+            lore.add(Component.text("§8§l✔ §8Effect applied!"));
+            lore.add(Component.text(""));
+        }
+
+        return lore;
     }
 
     private void setGlint(ItemMeta meta) {
@@ -385,17 +426,38 @@ public class DfyItem extends DfyStructure {
         meta.customName(TextUtilities.applyHexColoring("§r§f" + name));
     }
 
-    private void hideFlags(ItemMeta meta) {
-        meta.addItemFlags(
-                ItemFlag.HIDE_ARMOR_TRIM,
-                ItemFlag.HIDE_ATTRIBUTES,
-                ItemFlag.HIDE_ENCHANTS,
-                ItemFlag.HIDE_UNBREAKABLE,
-                ItemFlag.HIDE_STORED_ENCHANTS
+    private void hideFlags(ItemStack item) {
+        TooltipDisplay.Builder c = TooltipDisplay.tooltipDisplay();
+
+        c.addHiddenComponents(
+                DataComponentTypes.BANNER_PATTERNS,
+                DataComponentTypes.BLOCK_DATA,
+                DataComponentTypes.ATTRIBUTE_MODIFIERS,
+                DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER,
+                DataComponentTypes.POTION_CONTENTS,
+                DataComponentTypes.POTION_DURATION_SCALE,
+                DataComponentTypes.CHARGED_PROJECTILES,
+                DataComponentTypes.ENCHANTMENTS,
+                DataComponentTypes.BASE_COLOR,
+                DataComponentTypes.JUKEBOX_PLAYABLE,
+                DataComponentTypes.DYED_COLOR,
+                DataComponentTypes.FIREWORK_EXPLOSION,
+                DataComponentTypes.FIREWORKS,
+                DataComponentTypes.MAP_ID,
+                DataComponentTypes.PROVIDES_TRIM_MATERIAL,
+                DataComponentTypes.UNBREAKABLE,
+                DataComponentTypes.WRITABLE_BOOK_CONTENT,
+                DataComponentTypes.WRITTEN_BOOK_CONTENT,
+                DataComponentTypes.BUNDLE_CONTENTS,
+                DataComponentTypes.STORED_ENCHANTMENTS,
+                DataComponentTypes.TRIM,
+                DataComponentTypes.TOOL
         );
+
+        item.setData(DataComponentTypes.TOOLTIP_DISPLAY, c.build());
     }
 
-    private ArrayList<TextComponent> getAbilityLore() {
+    public ArrayList<TextComponent> getAbilityLore() {
         if (!abilities.isEmpty()) {
             ArrayList<TextComponent> lore = new ArrayList<>();
             for (String s : abilities) {
@@ -407,25 +469,25 @@ public class DfyItem extends DfyStructure {
                 lore.addAll(TextUtilities.insertIntoComponents(ability.getLoreBlock()));
                 lore.add(Component.text(""));
             }
-            lore.removeLast();
+            if (!lore.isEmpty()) lore.removeLast();
             return lore;
         }
         return null;
     }
 
-    private ArrayList<TextComponent> getLongLore() {
+    public ArrayList<TextComponent> getLongLore() {
         if (longLore != null) return TextUtilities.insertIntoComponents(TextUtilities.wrapText(longLore));
         return null;
     }
 
-    private TextComponent getRarityDisplayLore() {
+    public TextComponent getRarityDisplayLore() {
         if (rarity == null && type == null) return null;
         return TextUtilities.applyHexColoring("§r§8" +
                 ((rarity != null) ? rarity : "null") + " §r§8" +
                 ((type != null) ? type : "item"));
     }
 
-    private TextComponent getShortLore() {
+    public TextComponent getShortLore() {
         if (shortLore != null) return TextUtilities.applyHexColoring("§r§7" + shortLore);
         return null;
     }
@@ -441,8 +503,13 @@ public class DfyItem extends DfyStructure {
         abilities = new ArrayList<>();
         loadArrayList("abilities", abilities, String.class);
 
+        effects = null;
+
         initField("name", material.toString());
         glintNull = !initField("glint", false);
+
+        if (data.containsKey("max_stack_size")) maxStackSize = (int) data.get("max_stack_size");
+        else maxStackSize = -1;
 
         loadEnchants();
         if (enchantments != null) DfyStructure.sortAlphabetical(enchantments);
@@ -455,7 +522,7 @@ public class DfyItem extends DfyStructure {
         if (data.containsKey("equippable")) equippable = (Map<String, Object>) data.get("equippable");
         else equippable = null;
 
-        for (String s : new String[]{"rarity", "type", "longLore", "shortLore", "model"}) {
+        for (String s : new String[]{"rarity", "type", "longLore", "shortLore", "model", "mysticEnchant"}) {
             initField(s, "");
         }
 
@@ -493,7 +560,7 @@ public class DfyItem extends DfyStructure {
     public ItemStack getItem() {
         if (THROWN_LOAD_ERROR) return null;
         if (item == null) item = build();
-        return item;
+        return item.clone();
     }
 
     public static boolean isValidItem(ItemStack item) {
@@ -513,40 +580,129 @@ public class DfyItem extends DfyStructure {
         return transmuteItem(item, FileManager.getItem(id));
     }
 
+    public static ItemStack updateItem(ItemStack item) {
+        if (!DfyItem.isValidItem(item)) return item;
+
+        return transmuteItem(item, DfyItem.getBaseItem(item));
+    }
+
+
+
+
     public static ItemStack transmuteItem(ItemStack item, DfyItem target) {
-        if (target == null) {
+        if (!isValidItem(item)) {
             PLUGIN.warn("Failed to transmute item! Target is invalid!");
             return item;
         }
 
         if (!DfyItem.isValidItem(item)) return item;
+        DfyItem base = target;
 
-        ItemStack transItem = target.build();
-
-        ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
-        DfyEnchantment.applyEnchantments(transItem, enchants);
-
-        return transItem;
-    }
-
-
-    public static ItemStack updateItem(ItemStack item) {
-        if (!isValidItem(item)) {
-            PLUGIN.warn("Failed to update item! Target is invalid!");
-            return item;
-        }
-
-        DfyItem base = getBaseItem(item);
-
-        ItemStack updateItem = base.build();
+        ItemStack updateItem = base.buildSkeleton();
 
         ArrayList<DfyEnchantment> enchants = DfyEnchantment.getAppliedEnchants(item);
         DfyEnchantment.applyEnchantments(updateItem, enchants);
+
+        EffectApplicator.addEffectToItem(updateItem, EffectApplicator.getEffectsAsStrings(item));
+
+        int amount = item.getAmount();
+        if (amount > 1) updateItem.setAmount(amount);
+        if (updateItem.getMaxStackSize() == 1) {
+            long date = getCreationDate(item);
+            if (date != -1) setCreationDate(updateItem, date);
+        }
+        DfyItem.rebuildLore(updateItem);
 
         return updateItem;
     }
 
     public ArrayList<String> getAbilities() {
         return abilities;
+    }
+
+    public ArrayList<String> getEffects() {
+        return effects;
+    }
+
+    public ArrayList<DfyEnchantment> getEnchantments() {
+        return enchantments;
+    }
+
+    public String getRarity() {
+        return rarity;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getRawLongLore() {
+        return longLore;
+    }
+
+    public String getRawShortLore() {
+        return shortLore;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public Material getMaterial() {
+        return material;
+    }
+
+    public boolean isGlint() {
+        return glint;
+    }
+
+    public boolean isGlintNull() {
+        return glintNull;
+    }
+
+    public ArrayList<Map<TriggerSlot, ArrayList<Map<String, Object>>>> getStats() {
+        return stats;
+    }
+
+    public Map<String, Object> getConsumable() {
+        return consumable;
+    }
+
+    public Map<String, Object> getEquippable() {
+        return equippable;
+    }
+
+    public boolean deepEquals(DfyItem item) {
+        if (!Objects.equals(STRUCTURE_ID, item.getID())) return false;
+
+        if (!Objects.equals(name, item.getName())) return false;
+        if (!Objects.equals(type, item.getType())) return false;
+        if (material != item.getMaterial()) return false;
+        if (!Objects.equals(rarity, item.getRarity())) return false;
+        if (!Objects.equals(longLore, item.getRawLongLore())) return false;
+        if (!Objects.equals(shortLore, item.getRawShortLore())) return false;
+        if (!Objects.equals(model, item.getModel())) return false;
+
+        if (!Objects.equals(abilities, item.getAbilities())) return false;
+        if (!Objects.equals(stats, item.getStats())) return false;
+        if (!Objects.equals(effects, item.getEffects())) return false;
+
+        if (!Objects.equals(enchantments, item.getEnchantments())) return false;
+        if (!Objects.equals(mysticEnchant, item.getMysticEnchant())) return false;
+        if (glintNull != item.isGlintNull()) return false;
+        if (glint != item.isGlint()) return false;
+
+        if (!Objects.equals(equippable, item.getEquippable())) return false;
+        if (!Objects.equals(consumable, item.getConsumable())) return false;
+
+        return true;
+    }
+
+    public String getMysticEnchant() {
+        return mysticEnchant;
     }
 }

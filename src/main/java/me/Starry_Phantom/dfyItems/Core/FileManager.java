@@ -1,6 +1,8 @@
 package me.Starry_Phantom.dfyItems.Core;
 
 import me.Starry_Phantom.dfyItems.DfyItems;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
+import me.Starry_Phantom.dfyItems.itemStructure.BlockFunctions.DfyRecipe;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -12,9 +14,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -22,13 +22,16 @@ public class FileManager {
     private static DfyItems PLUGIN;
     private static Map<String, DfyItem> ITEMS;
     private static Map<String, DfyAbility> ABILITIES;
+    private static Map<String, DfyRecipe> RECIPE_IDS;
+    private static Map<Integer, DfyRecipe> RECIPE_HASHES;
     private static AbilityHandler ABILITY_HANDLER;
-    private static final String COMPILED_FOLDER_NAMESPACE = "compiled (DO NOT EDIT) (FOR PLUGIN USE ONLY)";
+    private static final String COMPILED_FOLDER_NAMESPACE = ".compiled";
 
     private static File itemsFolder;
     private static File scriptFolder;
     private static File abilityFolder;
     private static File compiledFoler;
+    private static File recipeFolder;
 
     private static File epochFile, backupEpochFile;
     private static Map<String, Integer> EPOCHS;
@@ -38,6 +41,8 @@ public class FileManager {
     public static boolean initialize() {
         ITEMS = new HashMap<>();
         ABILITIES = new HashMap<>();
+        RECIPE_IDS = new HashMap<>();
+        RECIPE_HASHES = new HashMap<>();
 
         boolean initResult = loadFiles();
         if (!initResult) PLUGIN.severe("Failed to initialize file structure!");
@@ -53,7 +58,7 @@ public class FileManager {
         return true;
     }
 
-    private static void loadEpochs() {
+    public static void loadEpochs() {
         Yaml yaml = new Yaml();
         try (InputStream input = new FileInputStream(epochFile)) {
             Map<String, Integer> temp = yaml.load(input);
@@ -93,6 +98,34 @@ public class FileManager {
         }.runTaskTimerAsynchronously(PLUGIN, 20 * 60 * 10, 20 * 60 * 10);
     }
 
+    public static void finalSaveEpochs(File file) {
+        boolean initResult;
+        Map<String, DfyAbility> abilities = new HashMap<>();
+        initResult = new StructureLoader<>(DfyAbility.class).load(abilityFolder, abilities);
+        if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");
+        ArrayList<String> abilReloads = new ArrayList<>();
+        for (String key : ABILITIES.keySet()) {
+            if (!abilities.containsKey(key)) continue;
+            if (!ABILITIES.get(key).equals(abilities.get(key))) {
+                abilReloads.add(key);
+            }
+        }
+        rebuildItems("ability", abilReloads.toArray(new String[0]), false);
+
+        Map<String, DfyItem> items = new HashMap<>();
+        initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, items);
+        if (!initResult) PLUGIN.severe("There may have been an error while saving epochs! This could cause desync issues!");
+        for (String key : ITEMS.keySet()) {
+            if (!items.containsKey(key)) continue;
+            if (!ITEMS.get(key).deepEquals(items.get(key))) {
+                increaseEpoch(key);
+            }
+        }
+
+        saveEpochs(file);
+
+    }
+
     public static void saveEpochs(File file) {
         try {
             DumperOptions options = new DumperOptions();
@@ -122,6 +155,7 @@ public class FileManager {
         File scriptFolder = makeFolderIfMissing("scripts");
         File abilityFolder = makeFolderIfMissing("abilities");
         File compileFolder = makeFolderIfMissing(COMPILED_FOLDER_NAMESPACE);
+        File recipeFolder = makeFolderIfMissing("recipes");
 
         epochFile = makeFileIfMissing("item_epochs.yml");
         backupEpochFile = makeFileIfMissing("item_epochs_backup.yml");
@@ -168,6 +202,7 @@ public class FileManager {
         itemsFolder = new File(dataFolder, "items");
         scriptFolder = new File(dataFolder, "scripts");
         abilityFolder = new File(dataFolder, "abilities");
+        recipeFolder = new File(dataFolder, "recipes");
         compiledFoler = new File(dataFolder, COMPILED_FOLDER_NAMESPACE);
         return true;
     }
@@ -176,9 +211,19 @@ public class FileManager {
         boolean initResult;
         initResult = new StructureLoader<>(DfyAbility.class).load(abilityFolder, ABILITIES);
         if (!initResult) PLUGIN.severe("Could not load abilities for some reason!!");
+        ABILITIES.put("applicator", EffectApplicator.getAbilityObject());
 
         initResult = new StructureLoader<>(DfyItem.class).load(itemsFolder, ITEMS);
         if (!initResult) PLUGIN.severe("Could not load items for some reason!!");
+
+        initResult = new StructureLoader<>(DfyRecipe.class).load(recipeFolder, RECIPE_IDS);
+        if (!initResult) PLUGIN.severe("Could not load recipes for some reason!!");
+
+        for (DfyRecipe recipe : RECIPE_IDS.values()) {
+            RECIPE_HASHES.put(recipe.getRecipe9Hash(), recipe);
+            if (recipe.has4Recipe()) RECIPE_HASHES.put(recipe.getRecipe4Hash(), recipe);
+
+        }
     }
 
     public static AbilityHandler createAbilityHandler() {
@@ -194,10 +239,32 @@ public class FileManager {
             if (ITEMS.containsKey(key)) ITEMS.replace(key, (DfyItem) storage.get(key));
             else ITEMS.put(key, (DfyItem) storage.get(key));
         }
+
+        if (clazz == DfyRecipe.class) for (String key : keys) {
+            if (RECIPE_IDS.containsKey(key)) {
+                DfyRecipe old = RECIPE_IDS.get(key);
+                RECIPE_HASHES.remove(old.getRecipe9Hash());
+                if (old.has4Recipe()) RECIPE_HASHES.remove(old.getRecipe4Hash());
+
+                RECIPE_IDS.replace(key, (DfyRecipe) storage.get(key));
+            }
+            else RECIPE_IDS.put(key, (DfyRecipe) storage.get(key));
+
+            DfyRecipe recipe = RECIPE_IDS.get(key);
+            RECIPE_HASHES.put(recipe.getRecipe9Hash(), recipe);
+            if (recipe.has4Recipe()) RECIPE_HASHES.put(recipe.getRecipe4Hash(), recipe);
+
+        }
+
         if (clazz == DfyAbility.class) { for (String key : keys) {
+            ArrayList<String> replaceKeys = new ArrayList<>();
             DfyAbility ability = (DfyAbility) storage.get(key);
+
             if (ABILITIES.containsKey(key)) {
                 DfyAbility oldAbility = ABILITIES.get(key);
+
+                if (!oldAbility.equals(ability)) replaceKeys.add(key);
+
                 ABILITY_HANDLER.replace(oldAbility, ability);
                 ABILITIES.replace(key, ability);
                 if (!oldAbility.getPath().equals(ability.getPath())) {
@@ -205,14 +272,15 @@ public class FileManager {
                 }
             } else {
                 ABILITIES.put(key, ability);
+                replaceKeys.add(key);
                 ABILITY_HANDLER.compile(ability);
             }
-        }
-            rebuildItems("ability", keys);
-        }
+
+            rebuildItems("ability", replaceKeys.toArray(new String[0]), true);
+        }}
     }
 
-    private static void rebuildItems(String target, String[] keys) {
+    private static void rebuildItems(String target, String[] keys, boolean loadData) {
         for (Object o : ITEMS.values().toArray()) {
             DfyItem i = (DfyItem) o;
             boolean found = false;
@@ -224,7 +292,7 @@ public class FileManager {
             }
             if (found) {
                 increaseEpoch(i.getID());
-                ITEMS.replace(i.getID(), new DfyItem(i.getSourceFile(), i.getIndex()));
+                if (loadData) ITEMS.replace(i.getID(), new DfyItem(i.getSourceFile(), i.getIndex()));
             }
 
         }
@@ -245,6 +313,22 @@ public class FileManager {
 
     public static Map<String, DfyAbility> getAbilities() {
         return ABILITIES;
+    }
+
+    public static ArrayList<DfyAbility> getAbilities(ArrayList<String> ids) {
+        ArrayList<DfyAbility> retVal = new ArrayList<>();
+        for (String id : ids) {
+            retVal.add(getAbility(id));
+        }
+        return retVal;
+    }
+
+    public static ArrayList<DfyAbility> getAbilities(String[] ids) {
+        ArrayList<DfyAbility> retVal = new ArrayList<>();
+        for (String id : ids) {
+            retVal.add(getAbility(id));
+        }
+        return retVal;
     }
 
     public static File getItemsFolder() {
@@ -278,5 +362,59 @@ public class FileManager {
 
     public static File getEpochFile() {
         return epochFile;
+    }
+
+    public static DfyRecipe getRecipe(int hash) {
+        return RECIPE_HASHES.get(hash);
+    }
+
+    public static ArrayList<String> getAllFilePaths() {
+        ArrayList<String> strings = new ArrayList<>();
+        getAllFilePathsHelper(itemsFolder, strings);
+        getAllFilePathsHelper(abilityFolder, strings);
+        getAllFilePathsHelper(scriptFolder, strings);
+        getAllFilePathsHelper(recipeFolder, strings);
+        stripPath(PLUGIN.getDataFolder(), strings);
+        return strings;
+    }
+
+    private static void stripPath(File strip, ArrayList<String> strings) {
+        String stripPath;
+        try {
+            stripPath = strip.getCanonicalPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (int i = 0; i < strings.size(); i++) {
+            strings.set(i, strings.get(i).replace(stripPath, ""));
+        }
+    }
+
+    private static void getAllFilePathsHelper(File file, ArrayList<String> strings) {
+        try {
+            strings.add(file.getCanonicalPath());
+            if (file.isDirectory()) {
+                File[] files = file.listFiles();
+                if (files == null) return;
+                for (File f : files) {
+                    strings.add(f.getCanonicalPath());
+                    if (f.isDirectory()) getAllFilePathsHelper(f, strings);
+
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static List<String> getItemTabcompletes(String arg) {
+        ArrayList<String> strings = new ArrayList<>(List.of(FileManager.getItems().keySet().toArray(new String[0])));
+        for (int i = 0; i < strings.size(); i++) if (!strings.get(i).contains(arg.toUpperCase())) {
+            strings.remove(i);
+            i--;
+        }
+        return strings;
     }
 }

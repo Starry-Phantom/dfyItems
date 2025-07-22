@@ -1,7 +1,7 @@
 package me.Starry_Phantom.dfyItems.Core;
 
-import io.papermc.paper.event.block.BlockBreakBlockEvent;
 import me.Starry_Phantom.dfyItems.DfyItems;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import net.kyori.adventure.text.Component;
@@ -12,8 +12,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -28,7 +28,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class AbilityHandler implements Listener {
 
@@ -51,7 +50,9 @@ public class AbilityHandler implements Listener {
 
         String[] keys = abilities.keySet().toArray(new String[0]);
         for (String s : keys) {
-            abilityFiles.put(abilities.get(s), compileFileFromAbility(abilities.get(s)));
+            DfyAbility ability = abilities.get(s);
+            if (ability.getPath() == null) continue;
+            abilityFiles.put(ability, compileFileFromAbility(ability));
         }
     }
 
@@ -130,6 +131,14 @@ public class AbilityHandler implements Listener {
         }
     }
 
+    @EventHandler
+    public void onShift(PlayerToggleSneakEvent e) {
+        if (e.getPlayer() instanceof Player player) {
+            ArrayList<DfyAbility> abilities = getActiveAbilities(player, TriggerCase.CROUCH);
+            runAbilities(abilities, e, PlayerToggleSneakEvent.class);
+        }
+    }
+
 //    @EventHandler
 //    public void onEquip(PlayerEquipEvent e) {
 //        if (e.getPlayer() instanceof Player player) {
@@ -144,6 +153,11 @@ public class AbilityHandler implements Listener {
                 if (!ability.isEnabled()) {
                     Player p = (Player) e.getClass().getMethod("getPlayer").invoke(e);
                     p.sendMessage(Component.text("§c" + ability.getDisplayName() + "§r§c is currently disabled!"));
+                    continue;
+                }
+
+                if (ability.getID().equals(EffectApplicator.STRUCTURE_ID)) {
+                    EffectApplicator.trigger(e);
                     continue;
                 }
 
@@ -177,7 +191,7 @@ public class AbilityHandler implements Listener {
 
             }
 
-            String[] abilities = DfyAbility.getItemAbilities(item);
+            String[] abilities = DfyAbility.getItemEffectiveAbilities(item);
             if (abilities == null) continue;
 
             for (String s : abilities) {

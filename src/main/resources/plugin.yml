@@ -1,5 +1,5 @@
 name: dfyItems
-version: '1.2.0'
+version: '1.3.0'
 main: me.Starry_Phantom.dfyItems.DfyItems
 api-version: '1.21'
 authors: [ Starry_Phantom ]
@@ -9,6 +9,9 @@ permissions:
     default: op
   dfyitems.transmute:
     description: Allows access to the /transmute command
+    default: op
+  dfyitems.enchant:
+    description: Allows access to the /enchant command
     default: op
   dfyitems.get.access:
     description: Allows access to the /get command
@@ -22,7 +25,12 @@ commands:
   get:
     description: 'Gives you an item :3'
     usage: /get <id> [amount] [player]
-    aliases: dgive, item-gui,dfis
+    aliases:
+      - dgive
+      - give
+      - item
+      - gui
+      - dfis
   dfyitems:
     description: Core plugin functions. Run for /dfyitems help for help!
     usage: /dfyitems

@@ -8,11 +8,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class GetCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+public class GetCommand implements CommandExecutor, TabCompleter {
     private final DfyItems PLUGIN;
 
     public GetCommand(DfyItems plugin) {
@@ -118,5 +124,23 @@ public class GetCommand implements CommandExecutor {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+        if (!commandSender.hasPermission("dfyitems.get.access")) return List.of();
+        ArrayList<String> strings = new ArrayList<>();
+        if (args.length == 1) strings.addAll(FileManager.getItemTabcompletes(args[0]));
+        else if (args.length <= 3) {
+            if (args.length == 3) {
+                try {
+                    int amount = Integer.parseInt(args[1]);
+                } catch (NumberFormatException ignored) {return strings;}
+            }
+            Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+            for (Player p : players) strings.add(p.getName());
+        }
+
+        return strings;
     }
 }

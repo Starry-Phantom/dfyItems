@@ -17,8 +17,8 @@ public abstract class DfyStructure {
     protected final int INDEX;
     protected String STRUCTURE_ID;
     protected Map<String, Object> data;
-    protected final static String DELIMITER = "|";
-    protected final static String SUB_DELIMITER = ":";
+    public final static String DELIMITER = "|";
+    public final static String SUB_DELIMITER = ":";
 
     protected boolean THROWN_LOAD_ERROR;
 
@@ -48,6 +48,10 @@ public abstract class DfyStructure {
         mergerHelper(structArray, 0, structArray.length / 2 - 1, structArray.length / 2, structArray.length - 1);
         structures.clear();
         for (DfyStructure structure : structArray) structures.add((T) structure);
+    }
+
+    public static <T extends DfyStructure> void sortAlphabetical(T[] structArray) {
+        mergerHelper(structArray, 0, structArray.length / 2 - 1, structArray.length / 2, structArray.length - 1);
     }
 
     private static void swap(DfyStructure[] arr, int index1, int index2) {

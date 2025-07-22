@@ -61,25 +61,18 @@ public class DfyEnchantment extends DfyStructure {
         if (enchants == null) return;
         if (enchants.isEmpty()) return;
 
-        ArrayList<DfyEnchantment> allEnchants = getAppliedEnchants(item);
-        if (allEnchants == null) allEnchants = new ArrayList<>();
-        allEnchants.addAll(enchants);
-        DfyStructure.sortAlphabetical(allEnchants);
-        DfyItem.setAppliedEnchants(item, allEnchants);
-
-        ArrayList<DfyEnchantment> defEnchants = DfyEnchantment.getDefaultEnchants(item);
-        if (defEnchants != null) allEnchants.addAll(defEnchants);
-        DfyEnchantment.sortAlphabetical(allEnchants);
-        removeDuplicates(allEnchants);
+        ArrayList<DfyEnchantment> appliedEnchants = getAppliedEnchants(item);
+        if (appliedEnchants == null) appliedEnchants = new ArrayList<>();
+        appliedEnchants.addAll(enchants);
+        DfyStructure.sortAlphabetical(appliedEnchants);
+        removeDuplicates(appliedEnchants);
+        DfyItem.setAppliedEnchants(item, appliedEnchants);
 
         ItemMeta meta = item.getItemMeta();
-        DfyItem baseItem = DfyItem.getBaseItem(item);
         if (!meta.hasEnchant(Enchantment.MENDING)) meta.addEnchant(Enchantment.MENDING, 1, true);
 
-        ArrayList<TextComponent> lore = baseItem.buildLore(allEnchants);
-        meta.lore(lore);
-
         item.setItemMeta(meta);
+        DfyItem.rebuildLore(item);
     }
 
     public static ArrayList<DfyEnchantment> getAppliedEnchants(ItemStack item, ArrayList<DfyEnchantment> enchantments) {
@@ -91,7 +84,7 @@ public class DfyEnchantment extends DfyStructure {
         return appliedEnchants;
     }
 
-    private static void removeDuplicates(ArrayList<DfyEnchantment> appliedEnchants) {
+    public static void removeDuplicates(ArrayList<DfyEnchantment> appliedEnchants) {
         for (int i = 0; i < appliedEnchants.size() - 1; i++) {
             DfyEnchantment first = appliedEnchants.get(i);
             DfyEnchantment second = appliedEnchants.get(i + 1);
@@ -121,14 +114,11 @@ public class DfyEnchantment extends DfyStructure {
             }
         }
 
-        ItemMeta meta = item.getItemMeta();
-        ArrayList<DfyEnchantment> allEnchants = new ArrayList<>(appliedEnchants);
-        allEnchants.addAll(defEnchants);
-        meta.lore(base.buildLore(allEnchants));
-        item.setItemMeta(meta);
-
         DfyItem.setAppliedEnchants(item, appliedEnchants);
         if (removedDefault) DfyItem.setDefaultEnchants(item, defEnchants);
+
+        DfyItem.rebuildLore(item);
+
         return removedDefault;
     }
 
@@ -159,6 +149,14 @@ public class DfyEnchantment extends DfyStructure {
             if (i < enchantments.size() - 1) enchantBlock.append(DELIMITER);
         }
         return enchantBlock.toString();
+    }
+
+    public static String getMysticEnchant(ItemStack item) {
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(PLUGIN, "enchantments"), PersistentDataType.TAG_CONTAINER);
+        if (container == null) return null;
+
+        String enchants = container.get(new NamespacedKey(PLUGIN, "mystic"), PersistentDataType.STRING);
+        return enchants;
     }
 
     public String getRomanLevel() {

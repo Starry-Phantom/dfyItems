@@ -4,6 +4,7 @@ import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerCase;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -12,16 +13,42 @@ import org.bukkit.persistence.PersistentDataType;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class DfyAbility extends DfyStructure {
-    private String displayName, lore, restriction, path, className;
+    private String displayName, lore, path, className;
     private boolean enabled;
     ArrayList<TriggerSlot> triggerSlots;
     ArrayList<TriggerCase> triggerCases;
 
+    public DfyAbility(String displayName, String lore, ArrayList<TriggerSlot> slots, ArrayList<TriggerCase> triggerCases, String path, String className, boolean enabled, String id) {
+        super(null, 0);
+        this.displayName = displayName;
+        this.lore = lore;
+        this.path = path;
+        this.triggerSlots = slots;
+        this.triggerCases = triggerCases;
+        this.className = className;
+        this.enabled = enabled;
+        this.STRUCTURE_ID = id;
+    }
+
     public DfyAbility(File loadFile, int index) {
         super(loadFile, index);
-        importData();
+    }
+
+    public static String[] getItemEffectiveAbilities(ItemStack item) {
+        String[] abilities = getItemAbilities(item);
+        String[] effects = EffectApplicator.getEffectsAsStrings(item);
+        String mysticEnchant = DfyEnchantment.getMysticEnchant(item);
+
+        ArrayList<String> strings = new ArrayList<>();
+        if (abilities != null) strings.addAll(List.of(abilities));
+        if (effects != null) strings.addAll(List.of(effects));
+        if (mysticEnchant != null) if (!mysticEnchant.isEmpty()) strings.add(mysticEnchant);
+        if (strings.isEmpty()) return null;
+        return strings.toArray(new String[0]);
     }
 
     public boolean isEnabled() {return enabled;}
@@ -29,17 +56,67 @@ public class DfyAbility extends DfyStructure {
     public static void reloadAbilitiesWithPath(String path) {
         for (Object o : FileManager.getAbilities().values().toArray()) {
             DfyAbility ability = (DfyAbility) o;
-            if (ability.getPath().equals(path)) {
+            if (Objects.equals(ability.getPath(), path)) {
                 FileManager.getAbilityHandler().recompile(ability);
             }
         }
     }
 
     public ArrayList<String> getLoreBlock() {
+        return getLoreBlock("§r§6");
+    }
+
+    public ArrayList<String> getLoreBlock(String abilityPrefix) {
         ArrayList<String> loreBlock = new ArrayList<>();
-        loreBlock.add("§r§6" + displayName);
+        if (displayName != null) loreBlock.add(abilityPrefix + displayName);
         if (lore != null && !lore.isEmpty()) loreBlock.addAll(TextUtilities.wrapText(lore, "§r§7"));
         return loreBlock;
+    }
+
+    public boolean equals(DfyAbility ability) {
+        if (!Objects.equals(STRUCTURE_ID, ability.getID())) {
+            return false;
+        }
+
+        if (!Objects.equals(displayName, ability.getDisplayName())) {
+            return false;
+        }
+
+        if (!Objects.equals(lore, ability.getLore())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean deepEquals(DfyAbility ability) {
+        if (!Objects.equals(STRUCTURE_ID, ability.getID())) {
+            return false;
+        }
+
+        if (!path.equals(ability.getPath())) {
+            return false;
+        }
+        if (!Objects.equals(displayName, ability.getDisplayName())) {
+            return false;
+        }
+
+        if (!Objects.equals(lore, ability.getLore())) {
+            return false;
+        }
+
+        if (!Objects.equals(triggerCases, ability.getTriggerCases())) {
+            return false;
+        }
+
+        if (!Objects.equals(triggerSlots, ability.getTriggerSlots())) {
+            return false;
+        }
+
+        if (enabled != ability.isEnabled()) {
+            return false;
+        }
+        return true;
     }
 
     public String getPath() {
@@ -48,7 +125,7 @@ public class DfyAbility extends DfyStructure {
 
     @Override
     protected boolean loadData() {
-        for (String s : new String[]{"displayName", "lore", "restriction"}) {
+        for (String s : new String[]{"displayName", "lore"}) {
             initField(s, "");
         }
         initField("enabled", false);
@@ -96,6 +173,9 @@ public class DfyAbility extends DfyStructure {
 
     public String getClassName() {
         return className;
+    }
+    public String getLore() {
+        return lore;
     }
 
     public String getDisplayName() {

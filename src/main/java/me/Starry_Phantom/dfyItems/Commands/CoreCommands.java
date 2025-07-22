@@ -4,6 +4,7 @@ import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.StructureLoader;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.DfyItems;
+import me.Starry_Phantom.dfyItems.itemStructure.BlockFunctions.DfyRecipe;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
@@ -11,15 +12,19 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class CoreCommands implements CommandExecutor {
+public class CoreCommands implements CommandExecutor, TabCompleter {
     private final DfyItems PLUGIN;
 
     public CoreCommands(DfyItems plugin) {
@@ -57,9 +62,18 @@ public class CoreCommands implements CommandExecutor {
             }
 
             String path = args[1];
-            if (path.matches("(items)|(abilities)|(scripts)|(config)|(all)")) {
-                // TODO: IMPLEMENT
-                return false;
+            if (path.matches("(epochs)|(all)")) {
+                if (path.matches("epochs")) {
+                    FileManager.loadEpochs();
+                } else {
+                    FileManager.loadEpochs();
+                    reloadScript("/scripts", commandSender);
+                    reloadFile("/abilities", commandSender, DfyAbility.class);
+                    reloadFile("/items", commandSender, DfyItem.class);
+
+                    reloadFile("/recipes", commandSender, DfyRecipe.class);
+                }
+                return true;
             }
 
             path = TextUtilities.correctPath(path);
@@ -71,6 +85,7 @@ public class CoreCommands implements CommandExecutor {
                 case "items" -> reloadFile(path, commandSender, DfyItem.class);
                 case "abilities" -> reloadFile(path, commandSender, DfyAbility.class);
                 case "scripts" -> reloadScript(path, commandSender);
+                case "recipes" -> reloadFile(path, commandSender, DfyRecipe.class);
                 default -> false;
             };
 
@@ -85,7 +100,11 @@ public class CoreCommands implements CommandExecutor {
         long time = System.nanoTime();
 
         try {
-            DfyAbility.reloadAbilitiesWithPath(PLUGIN.getDataFolder().getCanonicalPath() + path);
+            File reloadFile = new File(PLUGIN.getDataFolder().getCanonicalPath() + path);
+            if (reloadFile.isDirectory()) {
+                reloadScriptsIn(reloadFile);
+            }
+            else DfyAbility.reloadAbilitiesWithPath(PLUGIN.getDataFolder().getCanonicalPath() + path);
         } catch (IOException e) {
             if (sender instanceof Player) sender.sendMessage(Component.text(PLUGIN.getPrefix() + "An error occurred while reloading §6'" + path + "'§e!"));
             PLUGIN.log("An error occurred while reloading '" + path + "'!");
@@ -96,6 +115,21 @@ public class CoreCommands implements CommandExecutor {
         if (sender instanceof Player) sender.sendMessage(Component.text(PLUGIN.getPrefix() + "Reloading §6'" + path + "'§e in " + timeToReload + "ms!" ));
         PLUGIN.log("Reloaded '" + path + "' in " + timeToReload + "ms!");
         return true;
+    }
+
+    private void reloadScriptsIn(File reloadFile) {
+        File[] files = reloadFile.listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (f.isDirectory()) reloadScriptsIn(f);
+            else {
+                try {
+                    DfyAbility.reloadAbilitiesWithPath(f.getCanonicalPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     private <T extends DfyStructure> boolean reloadFile(String path, CommandSender sender, Class<T> clazz) {
@@ -146,5 +180,23 @@ public class CoreCommands implements CommandExecutor {
     private boolean sendHelp(CommandSender commandSender) {
         //TODO: IMPLEMENT
         return true;
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+        if (!commandSender.hasPermission("dfyitems.manage")) return List.of();
+        if (args.length == 1) return List.of("help", "reload");
+        if (args.length == 2) {
+            ArrayList<String> strings = new ArrayList<>();
+            strings.add("all");
+            strings.add("epochs");
+            strings.addAll(FileManager.getAllFilePaths());
+            for (int i = 0; i < strings.size(); i++) if (!strings.get(i).toUpperCase().contains(args[1].toUpperCase())) {
+                strings.remove(i);
+                i--;
+            }
+            return strings;
+        }
+        return List.of();
     }
 }

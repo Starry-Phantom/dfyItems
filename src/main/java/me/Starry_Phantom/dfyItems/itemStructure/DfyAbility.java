@@ -4,6 +4,7 @@ import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.Core.TriggerCase;
 import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -12,6 +13,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class DfyAbility extends DfyStructure {
@@ -34,6 +36,19 @@ public class DfyAbility extends DfyStructure {
 
     public DfyAbility(File loadFile, int index) {
         super(loadFile, index);
+    }
+
+    public static String[] getItemEffectiveAbilities(ItemStack item) {
+        String[] abilities = getItemAbilities(item);
+        String[] effects = EffectApplicator.getEffectsAsStrings(item);
+        String mysticEnchant = DfyEnchantment.getMysticEnchant(item);
+
+        ArrayList<String> strings = new ArrayList<>();
+        if (abilities != null) strings.addAll(List.of(abilities));
+        if (effects != null) strings.addAll(List.of(effects));
+        if (mysticEnchant != null) if (!mysticEnchant.isEmpty()) strings.add(mysticEnchant);
+        if (strings.isEmpty()) return null;
+        return strings.toArray(new String[0]);
     }
 
     public boolean isEnabled() {return enabled;}

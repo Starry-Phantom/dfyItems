@@ -191,7 +191,7 @@ public class AbilityHandler implements Listener {
 
             }
 
-            String[] abilities = DfyAbility.getItemAbilities(item);
+            String[] abilities = DfyAbility.getItemEffectiveAbilities(item);
             if (abilities == null) continue;
 
             for (String s : abilities) {

@@ -7,7 +7,7 @@ import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
-import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.Core.Items.TriggerSlot;
 import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;

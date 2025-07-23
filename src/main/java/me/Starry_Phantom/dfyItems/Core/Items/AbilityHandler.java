@@ -1,5 +1,6 @@
-package me.Starry_Phantom.dfyItems.Core;
+package me.Starry_Phantom.dfyItems.Core.Items;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;

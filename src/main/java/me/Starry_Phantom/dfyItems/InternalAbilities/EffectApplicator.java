@@ -2,13 +2,11 @@ package me.Starry_Phantom.dfyItems.InternalAbilities;
 
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
-import me.Starry_Phantom.dfyItems.Core.TriggerCase;
-import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.Core.Items.TriggerCase;
+import me.Starry_Phantom.dfyItems.Core.Items.TriggerSlot;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;

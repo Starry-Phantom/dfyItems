@@ -2,8 +2,8 @@ package me.Starry_Phantom.dfyItems.itemStructure;
 
 import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
-import me.Starry_Phantom.dfyItems.Core.TriggerCase;
-import me.Starry_Phantom.dfyItems.Core.TriggerSlot;
+import me.Starry_Phantom.dfyItems.Core.Items.TriggerCase;
+import me.Starry_Phantom.dfyItems.Core.Items.TriggerSlot;
 import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;

@@ -3,19 +3,12 @@ package me.Starry_Phantom.dfyItems;
 import me.Starry_Phantom.dfyItems.Commands.*;
 import me.Starry_Phantom.dfyItems.Core.*;
 import me.Starry_Phantom.dfyItems.Core.Blocks.CraftingRecipeHandler;
-import me.Starry_Phantom.dfyItems.itemStructure.DfyAbility;
-import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
+import me.Starry_Phantom.dfyItems.Core.Items.AbilityHandler;
+import me.Starry_Phantom.dfyItems.Core.Items.ItemUpdateHandler;
+import me.Starry_Phantom.dfyItems.Core.Items.StructureLoader;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.stream.Stream;
 
 public final class DfyItems extends JavaPlugin {
 

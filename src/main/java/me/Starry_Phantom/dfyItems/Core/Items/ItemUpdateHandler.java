@@ -1,11 +1,11 @@
-package me.Starry_Phantom.dfyItems.Core;
+package me.Starry_Phantom.dfyItems.Core.Items;
 
+import me.Starry_Phantom.dfyItems.Core.FileManager;
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyItem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChangedMainHandEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;

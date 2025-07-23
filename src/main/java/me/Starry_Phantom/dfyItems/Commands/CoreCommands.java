@@ -1,7 +1,7 @@
 package me.Starry_Phantom.dfyItems.Commands;
 
 import me.Starry_Phantom.dfyItems.Core.FileManager;
-import me.Starry_Phantom.dfyItems.Core.StructureLoader;
+import me.Starry_Phantom.dfyItems.Core.Items.StructureLoader;
 import me.Starry_Phantom.dfyItems.Core.TextUtilities;
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.itemStructure.BlockFunctions.DfyRecipe;

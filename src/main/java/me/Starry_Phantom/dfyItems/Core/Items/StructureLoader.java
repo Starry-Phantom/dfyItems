@@ -1,4 +1,4 @@
-package me.Starry_Phantom.dfyItems.Core;
+package me.Starry_Phantom.dfyItems.Core.Items;
 
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.itemStructure.DfyStructure;

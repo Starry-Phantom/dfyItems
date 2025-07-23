@@ -1,4 +1,4 @@
-package me.Starry_Phantom.dfyItems.Core;
+package me.Starry_Phantom.dfyItems.Core.Items;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;

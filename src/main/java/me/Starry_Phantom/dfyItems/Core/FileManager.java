@@ -1,5 +1,7 @@
 package me.Starry_Phantom.dfyItems.Core;
 
+import me.Starry_Phantom.dfyItems.Core.Items.AbilityHandler;
+import me.Starry_Phantom.dfyItems.Core.Items.StructureLoader;
 import me.Starry_Phantom.dfyItems.DfyItems;
 import me.Starry_Phantom.dfyItems.InternalAbilities.EffectApplicator;
 import me.Starry_Phantom.dfyItems.itemStructure.BlockFunctions.DfyRecipe;
